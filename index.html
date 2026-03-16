@@ -111,7 +111,10 @@ textarea{resize:vertical}
   <div class="clabel">설명문</div>
   <textarea id="inp-desc" rows="5" placeholder="영상 하단의 설명문을 복사하여 여기에 붙여 넣으세요."></textarea>
 </div>
-<div class="confirm-box" id="confirm-box">
+<div class="card">
+  <div class="clabel">키워드 <span style="font-weight:400;color:#aaa">(선택사항 — 설명문 하단에 자동 추가)</span></div>
+  <input type="text" id="inp-keywords" placeholder="예: 피아노 bgm 공부 힐링 수면 독서 집중 lofi 음악">
+</div>
   <p>설명문이 없습니다. 계속 진행하시겠습니까?<br><small style="color:#856404">설명문 없이 진행하면 제목만 번역됩니다.</small></p>
   <div class="confirm-btns">
     <button class="cbtn-yes" onclick="startTranslate(true)">예, 진행합니다</button>
@@ -418,9 +421,11 @@ async function applyYT(){
     const origLang=document.getElementById("inp-lang").value;
     const ytOrigLang=YT_CODE_MAP[origLang]||origLang;
 
-    // 원본어 키워드: Claude가 생성한 영어 키워드를 원본어에도 적용
+    // 원본어 키워드: 직접 입력한 키워드 우선, 없으면 AI 생성 키워드
+    const manualKeywords=document.getElementById("inp-keywords").value.trim();
     const origAR=AR[origLang];
-    const origKeywords=origAR?.keywords
+    const origKeywords=manualKeywords
+      || origAR?.keywords
       || AR["en"]?.keywords
       || Object.values(AR).find(r=>r.keywords)?.keywords
       || "";
