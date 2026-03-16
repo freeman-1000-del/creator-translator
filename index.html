@@ -177,11 +177,12 @@ const CB=[
 ];
 
 // YouTube가 실제로 지원하는 언어코드 매핑
-// zh-CN→zh-Hans, zh-TW→zh-Hant, pt→pt-BR, tl→fil 등 BCP-47 변환
+// YouTube localizations BCP-47 코드 매핑
+// nb(노르웨이 Bokmål) → YouTube 거부 확인, no로 변경 테스트
 const YT_CODE_MAP={
   "en":"en","fr":"fr","de":"de","es":"es","it":"it",
   "pt":"pt-BR","ru":"ru","nl":"nl","pl":"pl","sv":"sv",
-  "no":"nb","da":"da","fi":"fi","el":"el","cs":"cs",
+  "no":"no","da":"da","fi":"fi","el":"el","cs":"cs",
   "sk":"sk","hu":"hu","ro":"ro","bg":"bg","hr":"hr",
   "sr":"sr","uk":"uk","sq":"sq","et":"et","lv":"lv",
   "lt":"lt","ja":"ja","zh-CN":"zh-Hans","zh-TW":"zh-Hant",
@@ -360,13 +361,20 @@ async function applyYT(){
   function log(msg){logLines.push(msg);console.log(msg);sb.textContent=logLines.slice(-3).join(" → ");}
 
   const YT_SAFE=new Set([
+    // 확인된 63개국
     "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
-    "nb","da","fi","el","cs","sk","hu","ro","bg","hr",
-    "uk","et","lv","lt","ja","zh-Hans","zh-Hant",
-    "ar","hi","tr","vi","th","id","ms","bn","fa",
-    "iw","ta","te","ml","kn","af","sl","sq","sr","mk",
-    "my","km","ne","ca","cy","ga","uz","az","ka","hy",
-    "sw","si","mn","kk","pa","ur","fil"
+    "da","fi","el","cs","sk","hu","ro","bg","hr",
+    "sr","uk","sq","et","lv","lt","ja","zh-Hans","zh-Hant",
+    "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
+    "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
+    "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
+    // 테스트 예정 추가 코드
+    "no",   // 노르웨이 (nb 거부됨 → no 시도)
+    "lo",   // 라오어
+    "am",   // 암하라어
+    "zu",   // 줄루어
+    "yo",   // 요루바어
+    "ha",   // 하우사어
   ]);
 
   try{
