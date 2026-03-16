@@ -127,15 +127,10 @@ textarea{resize:vertical}
 <div class="progress-area" id="progress-area">
   <div class="progress-row">
     <div class="spin-sm"></div>
-    <span class="progress-label" id="prog-text">번역 준비 중...</span>
+    <span class="progress-label" id="prog-text" style="display:none"></span>
     <span class="timer-big" id="timer">0.0초</span>
   </div>
   <div class="progress-bar-wrap"><div class="progress-bar-fill bar-google" id="progress-bar" style="width:0%"></div></div>
-  <div class="step-labels">
-    <div class="step-label"><div class="step-dot" style="background:#34a853"></div>구글 번역</div>
-    <div class="step-label"><div class="step-dot" style="background:#0f2744"></div>AI 맥락 최적화</div>
-    <div class="step-label"><div class="step-dot" style="background:#FF0000"></div>YouTube 자동 등록</div>
-  </div>
 </div>
 <div class="status-box" id="status-box"></div>
 <div id="results" style="display:none">
@@ -300,9 +295,9 @@ async function startTranslate(nd){
     document.getElementById("progress-bar").className="progress-bar-fill bar-claude";
     document.getElementById("progress-bar").style.width="50%";
     gr.forEach(({lang,title:t,desc:d})=>{AR[lang.c]={lang,gTitle:t,gDesc:d,cTitle:"",cAlt:"",keywords:"",tags:[]};});
-    // ★ 원본어 AR에 포함 — 선택된 언어 기준
+    // ★ 원본어 AR에 포함 — Claude 배치에서 키워드 생성되도록
     AR[origLang]={lang:origLangInfo,gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:"",tags:[]};
-    const cd={count:0,total:LANGS.length};
+    const cd={count:0,total:LANGS.length+1}; // +1 원본어 포함
     await Promise.all(CB.map(async(codes)=>{
       const vc=codes.filter(c=>AR[c]&&AR[c].gTitle);if(!vc.length)return;
       const li=vc.map(c=>{const r=AR[c];return `${c}(${r.lang.n}): title="${r.gTitle}"${r.gDesc?`, desc="${r.gDesc.substring(0,120)}"`:""}`}).join("\n");
@@ -338,6 +333,11 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
         });
       }catch(e){vc.forEach(c=>{if(AR[c])AR[c].cTitle=AR[c].gTitle;cd.count++;});}
     }));
+    // ★ 원본어 키워드: 입력창에서 직접 받아서 설정
+    if(AR[origLang]){
+      const manualKw=document.getElementById("inp-keywords").value.trim();
+      if(manualKw)AR[origLang].keywords=manualKw;
+    }
     clearInterval(ti);
     const tt=((Date.now()-st)/1000).toFixed(1);
     document.getElementById("timer").textContent=tt+"초 완료!";
