@@ -356,14 +356,18 @@ async function applyYT(){
       await new Promise(r=>setTimeout(r,500));
     }
 
-    // STEP 3: 영어 1개만 먼저 테스트
+    // STEP 3: 전체 언어 등록
     const entries=Object.entries(AR);
-    sb.textContent="3단계: 영어 1개 테스트 등록 중...";
-    const enTitle=AR["en"]?AR["en"].cTitle||AR["en"].gTitle:"Test Title";
-    const enDesc=AR["en"]?AR["en"].gDesc||"":" ";
-    // snippet + localizations 동시 전송
+    sb.textContent="3단계: 전체 언어 등록 중...";
     const sn2=getData.items[0].snippet;
-    const testBody={
+    // 전체 localizations 구성
+    const localizations={};
+    entries.forEach(([code,r])=>{
+      const t=r.cTitle||r.gTitle;
+      if(!t||t.trim()==="")return;
+      localizations[code]={title:t.trim(),description:(r.gDesc||"").trim()||" "};
+    });
+    const fullBody={
       kind:"youtube#video",
       id:vid,
       snippet:{
@@ -373,16 +377,13 @@ async function applyYT(){
         defaultLanguage:"ko",
         tags:sn2.tags||[]
       },
-      localizations:{
-        "en":{title:enTitle,description:enDesc}
-      }
+      localizations:localizations
     };
-    sb.textContent="전송 데이터: "+JSON.stringify(testBody).substring(0,200);
-    await new Promise(r=>setTimeout(r,2000));
+    sb.textContent=`${Object.keys(localizations).length}개국 등록 중...`;
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify(testBody)
+      body:JSON.stringify(fullBody)
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error("localizations 오류: "+JSON.stringify(putData.error));
