@@ -356,34 +356,32 @@ async function applyYT(){
       await new Promise(r=>setTimeout(r,500));
     }
 
-    // STEP 3: snippet 업데이트 후 재조회
-    const getResp2=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{
-      headers:{"Authorization":"Bearer "+AT}
-    });
-    const getData2=await getResp2.json();
-    
-    // STEP 4: localizations 업데이트
-    sb.textContent="4단계: 자막탭 등록 중...";
-    const entries=Object.entries(AR);
-    // 빈 타이틀 필터링 + YouTube BCP-47 코드 매핑
-    const codeMap={"zh-CN":"zh-Hans","zh-TW":"zh-Hant","tl":"fil","sr":"sr"};
-    const existing=getData2.items[0].localizations||{};
-    let added=0;
-    entries.forEach(([code,r])=>{
-      const t=r.cTitle||r.gTitle;
-      if(!t||t.trim()==="")return; // 빈 타이틀 건너뜀
-      const ytCode=codeMap[code]||code;
-      existing[ytCode]={title:t.trim(),description:(r.gDesc||"").trim()};
-      added++;
-    });
-    sb.textContent=`등록할 언어 수: ${added}개 (빈 타이틀 제외)`;
-    await new Promise(r=>setTimeout(r,500));
-    const locBody={kind:"youtube#video",id:vid,localizations:existing};
-    sb.textContent="YouTube API 호출 중...";
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
+    // STEP 3: 영어 1개만 먼저 테스트
+    sb.textContent="3단계: 영어 1개 테스트 등록 중...";
+    const enTitle=AR["en"]?AR["en"].cTitle||AR["en"].gTitle:"Test Title";
+    const enDesc=AR["en"]?AR["en"].gDesc||"":" ";
+    // snippet + localizations 동시 전송
+    const sn2=getData.items[0].snippet;
+    const testBody={
+      kind:"youtube#video",
+      id:vid,
+      snippet:{
+        title:sn2.title,
+        description:sn2.description||" ",
+        categoryId:sn2.categoryId||"22",
+        defaultLanguage:"ko",
+        tags:sn2.tags||[]
+      },
+      localizations:{
+        "en":{title:enTitle,description:enDesc}
+      }
+    };
+    sb.textContent="전송 데이터: "+JSON.stringify(testBody).substring(0,200);
+    await new Promise(r=>setTimeout(r,2000));
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify(locBody)
+      body:JSON.stringify(testBody)
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error("localizations 오류: "+JSON.stringify(putData.error));
