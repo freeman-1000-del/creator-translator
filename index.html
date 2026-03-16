@@ -331,25 +331,44 @@ async function applyYT(){
     });
     const getData=await getResp.json();
     if(!getData.items||!getData.items[0])throw new Error("영상을 찾을 수 없습니다. URL을 확인해주세요.");
-    // 2. 기존 localizations에 새 번역 추가
-    const existing=getData.items[0].localizations||{};
-    const snippet=getData.items[0].snippet||{};
+
     const entries=Object.entries(AR);
+
+    // 2. defaultLanguage가 없으면 먼저 설정
+    const snippet=getData.items[0].snippet;
+    if(!snippet.defaultLanguage){
+      await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`,{
+        method:"PUT",
+        headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
+        body:JSON.stringify({
+          id:vid,
+          snippet:{
+            title:snippet.title,
+            description:snippet.description||"",
+            categoryId:snippet.categoryId||"10",
+            defaultLanguage:"ko"
+          }
+        })
+      });
+    }
+
+    // 3. localizations 업데이트
+    const existing=getData.items[0].localizations||{};
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
     });
-    // defaultLanguage 설정 (없으면 ko로 설정)
-    if(!snippet.defaultLanguage)snippet.defaultLanguage="ko";
+
     document.getElementById("progress-bar").style.width="50%";
     document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
-    // 3. snippet + localizations 함께 전송
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
+
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({id:vid,snippet:snippet,localizations:existing})
+      body:JSON.stringify({id:vid,localizations:existing})
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(putData.error.message);
+
     document.getElementById("progress-bar").style.width="100%";
     document.getElementById("prog-text").textContent=`${entries.length}개국 YouTube 자막탭 등록 완료!`;
     entries.forEach(([code])=>{
