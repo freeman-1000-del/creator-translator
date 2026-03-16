@@ -434,6 +434,11 @@ async function applyYT(){
       ? ytDesc(korDesc)+"\n\n🔑 "+origKeywords
       : ytDesc(korDesc);
 
+    // 디버그: 원본어 설명문 확인 (콘솔)
+    console.log("[원본어 키워드]", origKeywords);
+    console.log("[원본어 설명문 앞100자]", origDescWithKw.substring(0,100));
+    console.log("[원본어 설명문 뒤100자]", origDescWithKw.slice(-100));
+
     const locTitle={};
     const locFull={};
     locTitle[ytOrigLang]={title:ytTitle(korTitle),description:" "};
