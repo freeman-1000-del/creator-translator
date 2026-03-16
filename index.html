@@ -84,7 +84,10 @@ textarea{resize:vertical}
 <div class="app">
 <div class="header">
   <div class="logo">🌐</div>
-  <div><div class="h1">Creator Context Translator <span>70개국 · 구글번역 + AI 맥락 최적화</span></div></div>
+  <div>
+    <div class="h1">70개국어 자동 맥락번역기 <span>구글번역 + AI 맥락 최적화</span></div>
+    <div id="completion-msg" style="display:none;font-size:13px;color:#34a853;font-weight:600;margin-top:4px"></div>
+  </div>
 </div>
 <div class="ptabs">
   <div class="ptab yt on" onclick="setPlatform('yt',this)">▶ YouTube</div>
@@ -123,7 +126,7 @@ textarea{resize:vertical}
   </div>
 </div>
 <button class="btn-go" id="btn-go"><span id="btn-lbl">70개국 동시 번역 실행</span></button>
-<button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">▶ YouTube 자막탭 자동 등록</span></button>
+<button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">✔ 확인</span></button>
 <div class="progress-area" id="progress-area">
   <div class="progress-row">
     <div class="spin-sm"></div>
@@ -475,7 +478,7 @@ async function applyYT(){
     if(!res.ok){
       sb.className="status-box err";
       sb.innerHTML=`❌ STEP1 실패 — snippet 자체 문제<br><small>오류: ${res.err}<br>제목길이: ${Object.entries(loc5).map(([k,v])=>`${k}:${v.title.length}자`).join(", ")}</small>`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
       return;
     }
     log(`✓ STEP1 성공`);
@@ -503,7 +506,7 @@ async function applyYT(){
       document.getElementById("progress-bar").style.width="100%";
       sb.className="status-box ok";
       sb.textContent=`✅ YouTube ${goodCodes.length}개국 제목+설명문 등록 완료!`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
       return;
     }
     log(`✓ STEP2 성공`);
@@ -520,7 +523,7 @@ async function applyYT(){
         +`<small>오류: <b>${res.err}</b><br>`
         +`샘플 설명문(en): "${(locFull["en"]?.description||"").substring(0,80)}"<br>`
         +`샘플 설명문(es): "${(locFull["es"]?.description||"").substring(0,80)}"</small>`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
       return;
     }
 
@@ -529,14 +532,17 @@ async function applyYT(){
     log("GET으로 실제 저장 검증 중...");
     const verify=await verifyGet(vid,AT);
     sb.style.display="none";
+    sb.style.display="none";
+    const msg=document.getElementById("completion-msg");
+    if(msg){msg.textContent=`✓ 번역+등록 완료 — 70개국 (실제 YouTube ${verify.count}개국 등록)`;msg.style.display="block";}
     const rtitle=document.getElementById("results-title");
-    if(rtitle)rtitle.textContent=`번역+등록 완료 — 70개국  (실제 YouTube ${verify.count}개국 등록)`;
+    if(rtitle)rtitle.textContent=`번역 완료 — 70개국`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
     sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
-  btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
+  btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
 }
 
 async function tryPut(vid,snippet,localizations,token){
