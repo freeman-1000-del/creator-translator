@@ -285,7 +285,7 @@ RULES: Keep structure. No added content. Preserve brands. TITLE MUST BE UNDER 10
 Languages:\n${li}\nSource: "${title}"
 JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":[]}`).join(",")}}`;
       try{
-        const r=await fetch("https://api.anthropic.com/v1/messages",{
+        const r=await fetch("/api/claude",{
           method:"POST",headers:{"Content-Type":"application/json"},
           body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:2000,messages:[{role:"user",content:prompt}]})
         });
@@ -477,32 +477,11 @@ async function applyYT(){
     log(`STEP3: 전체 ${totalLangs}개국 제목+설명문 등록`);
     res=await tryPut(vid,baseSnippet,locFull,AT);
     if(!res.ok){
-      // 설명문이 문제 → 언어별로 설명문 진단
-      const badDescCodes=[];
-      const goodDescCodes=["ko"]; // ko부터 시작
-      const others=Object.keys(locFull).filter(k=>k!=="ko");
-      log(`STEP3 실패 → 설명문 문제 언어 찾는 중...`);
-      for(const code of others){
-        const testLoc={};
-        [...goodDescCodes,code].forEach(k=>{if(locFull[k])testLoc[k]=locFull[k];});
-        const sr=await tryPut(vid,baseSnippet,testLoc,AT);
-        if(sr.ok){goodDescCodes.push(code);}
-        else{
-          badDescCodes.push(code);
-          // 해당 언어는 제목만 등록
-          console.warn("❌ 설명문 거부 언어:",code,"설명문 앞 50자:",locFull[code]?.description?.substring(0,50));
-        }
-      }
-      // 통과된 코드는 설명문 포함, 나머지는 제목만
-      const locMixed={};
-      goodDescCodes.forEach(k=>{if(locFull[k])locMixed[k]=locFull[k];});
-      badDescCodes.forEach(k=>{if(locTitle[k])locMixed[k]=locTitle[k];});
-      await tryPut(vid,baseSnippet,locMixed,AT);
-      document.getElementById("progress-bar").style.width="100%";
       sb.className="status-box err";
-      sb.innerHTML=`⚠ 등록 완료 (설명문 일부 제외)<br>`
-        +`<small>설명문 거부 언어: <b>${badDescCodes.join(", ")||"없음"}</b><br>`
-        +`설명문 포함 등록: ${goodDescCodes.length}개국 / 제목만: ${badDescCodes.length}개국</small>`;
+      sb.innerHTML=`❌ STEP3 실패 — 설명문 포함 등록 거부됨<br>`
+        +`<small>오류: <b>${res.err}</b><br>`
+        +`샘플 설명문(en): "${(locFull["en"]?.description||"").substring(0,80)}"<br>`
+        +`샘플 설명문(es): "${(locFull["es"]?.description||"").substring(0,80)}"</small>`;
       btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
       return;
     }
