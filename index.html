@@ -431,7 +431,7 @@ async function applyYT(){
       || Object.values(AR).find(r=>r.keywords)?.keywords
       || "";
     const origDescWithKw=origKeywords
-      ? ytDesc(korDesc)+"\n\n🔑 "+origKeywords
+      ? ytDesc(korDesc)+" | "+origKeywords
       : ytDesc(korDesc);
 
     // 디버그: 원본어 설명문 확인 (콘솔)
@@ -451,7 +451,7 @@ async function applyYT(){
       if(!yc||!YT_SAFE.has(yc))return;
       // 번역어도 키워드 설명문 하단에 추가
       const descWithKw=r.keywords
-        ? ytDesc(r.gDesc)+"\n\n🔑 "+r.keywords
+        ? ytDesc(r.gDesc)+" | "+r.keywords
         : ytDesc(r.gDesc);
       locTitle[yc]={title:ytTitle(t),description:" "};
       locFull[yc]={title:ytTitle(t),description:descWithKw};
