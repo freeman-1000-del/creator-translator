@@ -366,8 +366,9 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
       grid.appendChild(row);
     });
     document.getElementById("status-box").style.display="none";
-    document.getElementById("results-title").textContent=
-      `번역 완료 — 70개국 / ${tt}초  (실제 ${Object.keys(AR).length}개국 처리)`;
+    const msg=document.getElementById("completion-msg");
+    if(msg){msg.textContent=`✓ 번역 완료 — 70개국 / ${tt}초`;msg.style.display="block";}
+    document.getElementById("results-title").textContent=`번역 결과`;
     if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
     clearInterval(ti);
@@ -534,9 +535,8 @@ async function applyYT(){
     sb.style.display="none";
     sb.style.display="none";
     const msg=document.getElementById("completion-msg");
-    if(msg){msg.textContent=`✓ 번역+등록 완료 — 70개국 (실제 YouTube ${verify.count}개국 등록)`;msg.style.display="block";}
-    const rtitle=document.getElementById("results-title");
-    if(rtitle)rtitle.textContent=`번역 완료 — 70개국`;
+    if(msg){msg.textContent=`✓ 번역+등록 완료 — 70개국 (YouTube ${verify.count}개국 등록)`;msg.style.display="block";}
+    document.getElementById("results-title").textContent=`번역 결과`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
