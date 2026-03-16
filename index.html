@@ -25,9 +25,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 input[type=text],textarea{width:100%;border:1px solid #e5e5e5;border-radius:8px;padding:10px 13px;font-size:14px;font-family:inherit;color:#1a1a1a;background:#fafafa;outline:none}
 input:focus,textarea:focus{border-color:#0f2744;background:white}
 textarea{resize:vertical}
+.yt-bar{background:white;border:1px solid #e5e5e5;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.yt-bar-info{font-size:13px;color:#555}
+.yt-bar-info strong{color:#1a1a1a}
+.yt-connected{display:flex;align-items:center;gap:8px;font-size:13px;color:#0a3622;font-weight:600}
+.yt-dot{width:8px;height:8px;border-radius:50%;background:#34a853}
+.btn-yt{padding:9px 20px;background:#FF0000;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-yt:hover{background:#cc0000}
+.btn-yt.out{background:#f5f5f5;color:#666;border:1px solid #e5e5e5}
 .btn-go{width:100%;padding:15px;background:#0f2744;color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px}
 .btn-go:hover{background:#163860}
 .btn-go:disabled{opacity:.5;cursor:not-allowed}
+.btn-apply{width:100%;padding:13px;background:#34a853;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px;margin-bottom:14px}
+.btn-apply:hover{background:#2d9248}
+.btn-apply:disabled{opacity:.5;cursor:not-allowed}
 .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .confirm-box{background:#fff3cd;border:1px solid #ffe69c;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:none}
@@ -43,6 +54,7 @@ textarea{resize:vertical}
 .progress-bar-fill{height:7px;border-radius:4px;transition:width .15s}
 .bar-google{background:#34a853}
 .bar-claude{background:#0f2744}
+.bar-apply{background:#FF0000}
 .step-labels{display:flex;gap:12px;font-size:11px;color:#999}
 .step-label{display:flex;align-items:center;gap:4px}
 .step-dot{width:8px;height:8px;border-radius:50%}
@@ -64,7 +76,8 @@ textarea{resize:vertical}
 .copy-btn{font-size:11px;padding:5px 11px;background:#f5f5f5;border:1px solid #e5e5e5;border-radius:8px;color:#666;cursor:pointer;white-space:nowrap}
 .copy-btn:hover{background:#e8e8e8}
 .spin-sm{width:13px;height:13px;border:2px solid #ccc;border-top-color:#0f2744;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-.context-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#e8f4fd;color:#0f6cbf;border:1px solid #b3d9f5;margin-left:6px;font-weight:600}
+.ctx-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#e8f4fd;color:#0f6cbf;border:1px solid #b3d9f5;margin-left:6px;font-weight:600}
+.ok-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#d1e7dd;color:#0a3622;border:1px solid #a3cfbb;margin-left:4px;font-weight:600;display:none}
 </style>
 </head>
 <body>
@@ -77,6 +90,10 @@ textarea{resize:vertical}
   <div class="ptab yt on" onclick="setPlatform('yt',this)">▶ YouTube</div>
   <div class="ptab tt" onclick="setPlatform('tt',this)">♪ TikTok</div>
   <div class="ptab ig" onclick="setPlatform('ig',this)">◎ Instagram</div>
+</div>
+<div class="yt-bar">
+  <div class="yt-bar-info" id="yt-info"><strong>YouTube 자동 적용</strong> — 로그인하면 번역 결과가 자막탭에 자동 등록됩니다</div>
+  <button class="btn-yt" id="btn-yt-login" onclick="loginYT()">▶ YouTube 로그인</button>
 </div>
 <div class="card">
   <div class="clabel">URL</div>
@@ -94,13 +111,14 @@ textarea{resize:vertical}
   <textarea id="inp-desc" rows="5" placeholder="영상 하단의 설명문을 복사하여 여기에 붙여 넣으세요."></textarea>
 </div>
 <div class="confirm-box" id="confirm-box">
-  <p>설명문 내용이 없습니다. 그래도 번역을 진행하시겠습니까?<br><small style="color:#856404">설명문 없이 진행하면 제목만 번역됩니다.</small></p>
+  <p>설명문이 없습니다. 계속 진행하시겠습니까?<br><small style="color:#856404">설명문 없이 진행하면 제목만 번역됩니다.</small></p>
   <div class="confirm-btns">
     <button class="cbtn-yes" onclick="startTranslate(true)">예, 진행합니다</button>
     <button class="cbtn-no" onclick="hideConfirm()">아니오, 설명문 입력</button>
   </div>
 </div>
 <button class="btn-go" id="btn-go"><span id="btn-lbl">70개국 동시 번역 실행</span></button>
+<button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">▶ YouTube 자막탭 자동 등록</span></button>
 <div class="progress-area" id="progress-area">
   <div class="progress-row">
     <div class="spin-sm"></div>
@@ -111,6 +129,7 @@ textarea{resize:vertical}
   <div class="step-labels">
     <div class="step-label"><div class="step-dot" style="background:#34a853"></div>구글 번역</div>
     <div class="step-label"><div class="step-dot" style="background:#0f2744"></div>AI 맥락 최적화</div>
+    <div class="step-label"><div class="step-dot" style="background:#FF0000"></div>YouTube 자동 등록</div>
   </div>
 </div>
 <div class="status-box" id="status-box"></div>
@@ -121,9 +140,10 @@ textarea{resize:vertical}
 </div>
 <script>
 const GK="AIzaSyDbmScuw7OWmolYKMpVwQnF3mOJVgHC1Bc";
+const CID="814006479687-1rk3j7p24e2p7k4nliiu8viu5bkf517g.apps.googleusercontent.com";
 const LANGS=[
   {c:"en",n:"English (US)",f:"🇺🇸"},{c:"fr",n:"Français",f:"🇫🇷"},{c:"de",n:"Deutsch",f:"🇩🇪"},
-  {c:"es",n:"Español",f:"🇪🇸"},{c:"it",n:"Italiano",f:"🇮🇹"},{c:"pt",n:"Português",f:"🇧🇷"},
+  {c:"es",n:"Español",f:"🇪🇸"},{c:"it",n:"Italiano",f:"🇮🇹"},{c:"pt",n:"Português (BR)",f:"🇧🇷"},
   {c:"ru",n:"Русский",f:"🇷🇺"},{c:"nl",n:"Nederlands",f:"🇳🇱"},{c:"pl",n:"Polski",f:"🇵🇱"},
   {c:"sv",n:"Svenska",f:"🇸🇪"},{c:"no",n:"Norsk",f:"🇳🇴"},{c:"da",n:"Dansk",f:"🇩🇰"},
   {c:"fi",n:"Suomi",f:"🇫🇮"},{c:"el",n:"Ελληνικά",f:"🇬🇷"},{c:"cs",n:"Čeština",f:"🇨🇿"},
@@ -155,8 +175,30 @@ const CB=[
   ["ka","hy","my","km","si","sw","am","yo","ha","zu"],
   ["ca","cy","ga","af","ne","sl","mk","lo"]
 ];
-let ti=null,AR={},CP="yt";
-function setPlatform(p,el){CP=p;document.querySelectorAll(".ptab").forEach(t=>t.classList.remove("on"));el.classList.add("on");}
+let ti=null,AR={},curP="yt",AT=null;
+window.addEventListener('load',()=>{
+  const p=new URLSearchParams(window.location.search);
+  const t=p.get('access_token');
+  if(t){AT=t;window.history.replaceState({},'',window.location.pathname);setConnected();}
+});
+function loginYT(){
+  const ru=window.location.origin+"/api/auth/callback";
+  const sc="https://www.googleapis.com/auth/youtube.force-ssl";
+  window.location.href=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CID}&redirect_uri=${encodeURIComponent(ru)}&response_type=code&scope=${encodeURIComponent(sc)}&access_type=offline&prompt=consent`;
+}
+function setConnected(){
+  document.getElementById('yt-info').innerHTML='<div class="yt-connected"><div class="yt-dot"></div>YouTube 연결됨 — 번역 후 자동 등록 가능</div>';
+  const b=document.getElementById('btn-yt-login');
+  b.textContent='로그아웃';b.classList.add('out');b.onclick=logoutYT;
+}
+function logoutYT(){
+  AT=null;
+  document.getElementById('yt-info').innerHTML='<strong>YouTube 자동 적용</strong> — 로그인하면 번역 결과가 자막탭에 자동 등록됩니다';
+  const b=document.getElementById('btn-yt-login');
+  b.textContent='▶ YouTube 로그인';b.classList.remove('out');b.onclick=loginYT;
+  document.getElementById('btn-apply').style.display='none';
+}
+function setPlatform(p,el){curP=p;document.querySelectorAll(".ptab").forEach(t=>t.classList.remove("on"));el.classList.add("on");}
 function hideConfirm(){document.getElementById("confirm-box").style.display="none";document.getElementById("inp-desc").focus();}
 document.getElementById("btn-go").addEventListener("click",function(){
   const t=document.getElementById("inp-title").value.trim();
@@ -169,18 +211,17 @@ async function startTranslate(nd){
   document.getElementById("confirm-box").style.display="none";
   const title=document.getElementById("inp-title").value.trim();
   const desc=nd?"":document.getElementById("inp-desc").value.trim();
-  const pname={yt:"YouTube",tt:"TikTok",ig:"Instagram"}[CP];
+  const pname={yt:"YouTube",tt:"TikTok",ig:"Instagram"}[curP];
   const btn=document.getElementById("btn-go");
-  btn.disabled=true;
-  document.getElementById("btn-lbl").innerHTML='<div class="spinner"></div>';
+  btn.disabled=true;document.getElementById("btn-lbl").innerHTML='<div class="spinner"></div>';
   document.getElementById("status-box").style.display="none";
   document.getElementById("results").style.display="none";
   document.getElementById("results-grid").innerHTML="";
   document.getElementById("progress-area").style.display="block";
   document.getElementById("progress-bar").style.width="0%";
   document.getElementById("progress-bar").className="progress-bar-fill bar-google";
-  AR={};
-  let el=0;clearInterval(ti);
+  document.getElementById("btn-apply").style.display="none";
+  AR={};let el=0;clearInterval(ti);
   ti=setInterval(()=>{el+=0.1;document.getElementById("timer").textContent=el.toFixed(1)+"초";},100);
   const st=Date.now();
   const texts=desc?[title,desc.substring(0,500)]:[title];
@@ -194,8 +235,7 @@ async function startTranslate(nd){
         const d=await r.json();
         if(d.error)return{lang,title:"",desc:""};
         const tr=d.data.translations;
-        done++;
-        document.getElementById("progress-bar").style.width=Math.round(done/LANGS.length*50)+"%";
+        done++;document.getElementById("progress-bar").style.width=Math.round(done/LANGS.length*50)+"%";
         return{lang,title:tr[0]?.translatedText||"",desc:desc?tr[1]?.translatedText||"":""};
       }catch(e){return{lang,title:"",desc:""};}
     }));
@@ -206,16 +246,15 @@ async function startTranslate(nd){
     gr.forEach(({lang,title:t,desc:d})=>{AR[lang.c]={lang,gTitle:t,gDesc:d,cTitle:"",cAlt:"",keywords:"",tags:[]};});
     const cd={count:0,total:LANGS.length};
     await Promise.all(CB.map(async(codes)=>{
-      const vc=codes.filter(c=>AR[c]&&AR[c].gTitle);
-      if(!vc.length)return;
+      const vc=codes.filter(c=>AR[c]&&AR[c].gTitle);if(!vc.length)return;
       const li=vc.map(c=>{const r=AR[c];return `${c}(${r.lang.n}): title="${r.gTitle}"${r.gDesc?`, desc="${r.gDesc.substring(0,120)}"`:""}`}).join("\n");
-      const prompt=`Expert creator localizer for ${pname}. Google already translated the content. Your job:
-1. Optimize title for CTR/cultural appeal (keep structure)
-2. Generate alternative title for A/B test
-3. Generate 10 contextual SEO keywords in target language (space-separated)
-4. Generate ${pname==="YouTube"?"5-7 SEO tags":pname==="TikTok"?"3-5 hashtags":"8-10 hashtags"}
-RULES: Keep structure. No added content. No profanity. Preserve brands/timestamps.
-Languages:\n${li}\nSource title: "${title}"
+      const prompt=`Expert creator localizer for ${pname}. Google translated. Now optimize:
+1. Title for CTR/cultural appeal (keep structure)
+2. Alt title for A/B test
+3. 10 local SEO keywords (space-separated)
+4. ${pname==="YouTube"?"5-7 SEO tags":pname==="TikTok"?"3-5 hashtags":"8-10 hashtags"}
+RULES: Keep structure. No added content. Preserve brands.
+Languages:\n${li}\nSource: "${title}"
 JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":[]}`).join(",")}}`;
       try{
         const r=await fetch("https://api.anthropic.com/v1/messages",{
@@ -248,7 +287,7 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
       const tags=(r.tags||[]).map(t=>`<span class="lang-tag">${t.startsWith("#")?t:"#"+t}</span>`).join("");
       row.innerHTML=`<div class="lang-name"><span class="lang-flag">${lang.f}</span>${lang.n}</div>
         <div class="lang-content">
-          <div class="lang-title">${esc(r.cTitle||r.gTitle)}<span class="context-badge">맥락</span></div>
+          <div class="lang-title">${esc(r.cTitle||r.gTitle)}<span class="ctx-badge">맥락</span><span class="ok-badge" id="ob_${id}">✓ 등록됨</span></div>
           ${r.cAlt?`<div class="lang-title-alt">↳ ${esc(r.cAlt)}</div>`:""}
           ${!nd&&r.gDesc?`<div class="lang-desc">${esc(r.gDesc.substring(0,150))}${r.gDesc.length>150?"...":""}</div>`:""}
           ${r.keywords?`<div class="lang-kw">🔑 ${esc(r.keywords)}</div>`:""}
@@ -259,11 +298,49 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
     });
     const sb=document.getElementById("status-box");
     sb.className="status-box ok";sb.textContent=`✓ 완료 — ${Object.keys(AR).length}개국 / 총 ${tt}초`;sb.style.display="block";
+    if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
     clearInterval(ti);
     const sb=document.getElementById("status-box");sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
   btn.disabled=false;document.getElementById("btn-lbl").textContent="70개국 동시 번역 실행";
+}
+async function applyYT(){
+  const url=document.getElementById("inp-url").value.trim();
+  const vid=url.match(/[?&]v=([^&]+)/)?.[1];
+  if(!vid){alert("URL 칸에 YouTube 영상 주소를 입력해주세요.");return;}
+  if(!AT){alert("YouTube 로그인이 필요합니다.");return;}
+  const btn=document.getElementById("btn-apply");
+  btn.disabled=true;document.getElementById("apply-lbl").innerHTML='<div class="spinner"></div> 등록 중...';
+  document.getElementById("progress-bar").className="progress-bar-fill bar-apply";
+  document.getElementById("progress-area").style.display="block";
+  document.getElementById("progress-bar").style.width="0%";
+  const entries=Object.entries(AR);let done=0;
+  const localizations={};
+  entries.forEach(([code,r])=>{
+    localizations[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
+  });
+  try{
+    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
+      method:"PUT",
+      headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
+      body:JSON.stringify({id:vid,localizations})
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    done=entries.length;
+    document.getElementById("progress-bar").style.width="100%";
+    document.getElementById("prog-text").textContent=`${done}개국 YouTube 자막탭 등록 완료!`;
+    entries.forEach(([code])=>{
+      const ob=document.getElementById("ob_r_"+code.replace(/[^a-zA-Z0-9]/g,"_"));
+      if(ob)ob.style.display="inline-flex";
+    });
+    const sb=document.getElementById("status-box");
+    sb.className="status-box ok";sb.textContent=`✓ YouTube 자막탭 ${done}개국 등록 완료!`;sb.style.display="block";
+  }catch(e){
+    const sb=document.getElementById("status-box");sb.className="status-box err";sb.textContent="YouTube 등록 오류: "+e.message;sb.style.display="block";
+  }
+  btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
 }
 function copyRow(id){
   const lc=Object.keys(AR).find(k=>k.replace(/[^a-zA-Z0-9]/g,"_")===id.replace("r_",""));
