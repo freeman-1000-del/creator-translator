@@ -356,13 +356,18 @@ async function applyYT(){
       await new Promise(r=>setTimeout(r,500));
     }
 
-    // STEP 3: localizations 업데이트
+    // STEP 3: localizations 업데이트 (YouTube BCP-47 코드 매핑)
     sb.textContent="3단계: 자막탭 등록 중...";
     const entries=Object.entries(AR);
+    // YouTube API 언어 코드 매핑
+    const codeMap={"zh-CN":"zh-Hans","zh-TW":"zh-Hant","tl":"fil"};
     const existing=getData.items[0].localizations||{};
     entries.forEach(([code,r])=>{
-      existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
+      const ytCode=codeMap[code]||code;
+      existing[ytCode]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
     });
+    sb.textContent=`등록할 언어 수: ${Object.keys(existing).length}개`;
+    await new Promise(r=>setTimeout(r,500));
     const locBody={kind:"youtube#video",id:vid,localizations:existing};
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
