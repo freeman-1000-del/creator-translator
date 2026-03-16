@@ -340,10 +340,10 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="50%";
     document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
     // 3. 업데이트
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({kind:"youtube#video",etag:getData.items[0].etag,id:vid,localizations:existing})
+      body:JSON.stringify({kind:"youtube#video",etag:getData.items[0].etag,id:vid,snippet:getData.items[0].snippet,localizations:existing})
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(putData.error.message);
