@@ -334,25 +334,9 @@ async function applyYT(){
 
     const entries=Object.entries(AR);
 
-    // 2. defaultLanguage가 없으면 먼저 설정
+    // 2. snippet + localizations 한번에 업데이트
     const snippet=getData.items[0].snippet;
-    if(!snippet.defaultLanguage){
-      await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`,{
-        method:"PUT",
-        headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-        body:JSON.stringify({
-          id:vid,
-          snippet:{
-            title:snippet.title,
-            description:snippet.description||"",
-            categoryId:snippet.categoryId||"10",
-            defaultLanguage:"ko"
-          }
-        })
-      });
-    }
-
-    // 3. localizations 업데이트
+    snippet.defaultLanguage=snippet.defaultLanguage||"ko";
     const existing=getData.items[0].localizations||{};
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
@@ -361,10 +345,19 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="50%";
     document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
 
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({id:vid,localizations:existing})
+      body:JSON.stringify({
+        id:vid,
+        snippet:{
+          title:snippet.title,
+          description:snippet.description||"",
+          categoryId:snippet.categoryId||"10",
+          defaultLanguage:snippet.defaultLanguage
+        },
+        localizations:existing
+      })
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(putData.error.message);
