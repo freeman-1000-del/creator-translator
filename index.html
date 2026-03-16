@@ -360,7 +360,7 @@ async function applyYT(){
       })
     });
     const putData=await putResp.json();
-    if(putData.error)throw new Error(putData.error.message);
+    if(putData.error)throw new Error(JSON.stringify(putData.error));
 
     document.getElementById("progress-bar").style.width="100%";
     document.getElementById("prog-text").textContent=`${entries.length}개국 YouTube 자막탭 등록 완료!`;
