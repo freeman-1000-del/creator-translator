@@ -510,22 +510,8 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="65%";
 
     // ━━━━━ STEP 3: 전체 제목+설명문 ━━━━━
-    // 설명문 샘플 디버그 — 화면에 직접 표시
-    const sampleCodes=["es","en","fr","ja","de"];
-    const descSamples=sampleCodes.map(c=>
-      locFull[c]?`${c}: "${(locFull[c].description||"").substring(0,40)}"`:""
-    ).filter(Boolean).join("\n");
-    sb.innerHTML=`STEP3 직전 설명문 내용 확인:<br><small style="font-family:monospace;white-space:pre">${descSamples.replace(/\n/g,"<br>")}</small>`;
-    await new Promise(r=>setTimeout(r,3000)); // 3초 표시
-    // 설명문이 실제로 있는지 확인
-    const hasDesc=Object.values(locFull).some(v=>v.description&&v.description.trim().length>1);
-    if(!hasDesc){
-      sb.className="status-box err";
-      sb.innerHTML=`⚠ 설명문 데이터 없음 — 번역 실행 시 설명문을 입력했는지 확인하세요<br>`
-        +`<small>현재 모든 언어의 설명문이 비어 있습니다.</small>`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
-      return;
-    }
+    // 원본어 설명문+키워드 확인 (콘솔)
+    console.log(`[STEP3] ${ytOrigLang} 설명문:`, locFull[ytOrigLang]?.description?.slice(-100));
     log(`STEP3: 전체 ${totalLangs}개국 제목+설명문 등록`);
     res=await tryPut(vid,baseSnippet,locFull,AT);
     if(!res.ok){
