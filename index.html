@@ -363,7 +363,7 @@ async function applyYT(){
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
     });
-    const locBody={id:vid,localizations:existing};
+    const locBody={kind:"youtube#video",id:vid,localizations:existing};
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
