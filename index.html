@@ -356,19 +356,30 @@ async function applyYT(){
       await new Promise(r=>setTimeout(r,500));
     }
 
-    // STEP 3: localizations 업데이트 (YouTube BCP-47 코드 매핑)
-    sb.textContent="3단계: 자막탭 등록 중...";
-    const entries=Object.entries(AR);
-    // YouTube API 언어 코드 매핑
-    const codeMap={"zh-CN":"zh-Hans","zh-TW":"zh-Hant","tl":"fil"};
-    const existing=getData.items[0].localizations||{};
-    entries.forEach(([code,r])=>{
-      const ytCode=codeMap[code]||code;
-      existing[ytCode]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
+    // STEP 3: snippet 업데이트 후 재조회
+    const getResp2=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{
+      headers:{"Authorization":"Bearer "+AT}
     });
-    sb.textContent=`등록할 언어 수: ${Object.keys(existing).length}개`;
+    const getData2=await getResp2.json();
+    
+    // STEP 4: localizations 업데이트
+    sb.textContent="4단계: 자막탭 등록 중...";
+    const entries=Object.entries(AR);
+    // 빈 타이틀 필터링 + YouTube BCP-47 코드 매핑
+    const codeMap={"zh-CN":"zh-Hans","zh-TW":"zh-Hant","tl":"fil","sr":"sr"};
+    const existing=getData2.items[0].localizations||{};
+    let added=0;
+    entries.forEach(([code,r])=>{
+      const t=r.cTitle||r.gTitle;
+      if(!t||t.trim()==="")return; // 빈 타이틀 건너뜀
+      const ytCode=codeMap[code]||code;
+      existing[ytCode]={title:t.trim(),description:(r.gDesc||"").trim()};
+      added++;
+    });
+    sb.textContent=`등록할 언어 수: ${added}개 (빈 타이틀 제외)`;
     await new Promise(r=>setTimeout(r,500));
     const locBody={kind:"youtube#video",id:vid,localizations:existing};
+    sb.textContent="YouTube API 호출 중...";
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
