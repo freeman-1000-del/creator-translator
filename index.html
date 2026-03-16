@@ -418,9 +418,12 @@ async function applyYT(){
     const origLang=document.getElementById("inp-lang").value;
     const ytOrigLang=YT_CODE_MAP[origLang]||origLang;
 
-    // 원본어 키워드: AR에서 origLang 항목의 keywords 가져오기
-    const origAR=AR[origLang]||AR[Object.keys(AR)[0]];
-    const origKeywords=origAR?.keywords||"";
+    // 원본어 키워드: Claude가 생성한 영어 키워드를 원본어에도 적용
+    const origAR=AR[origLang];
+    const origKeywords=origAR?.keywords
+      || AR["en"]?.keywords
+      || Object.values(AR).find(r=>r.keywords)?.keywords
+      || "";
     const origDescWithKw=origKeywords
       ? ytDesc(korDesc)+"\n\n🔑 "+origKeywords
       : ytDesc(korDesc);
