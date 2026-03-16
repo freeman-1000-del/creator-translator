@@ -431,7 +431,7 @@ async function applyYT(){
       || Object.values(AR).find(r=>r.keywords)?.keywords
       || "";
     const origDescWithKw=origKeywords
-      ? ytDesc(korDesc)+"\n"+origKeywords
+      ? ytDesc(korDesc+"\n\n"+origKeywords)
       : ytDesc(korDesc);
 
     // 디버그: 원본어 설명문 확인 (콘솔)
@@ -451,7 +451,7 @@ async function applyYT(){
       if(!yc||!YT_SAFE.has(yc))return;
       // 번역어도 키워드 설명문 하단에 추가
       const descWithKw=r.keywords
-        ? ytDesc(r.gDesc)+"\n"+r.keywords
+        ? ytDesc(r.gDesc+"\n\n"+r.keywords)
         : ytDesc(r.gDesc);
       locTitle[yc]={title:ytTitle(t),description:" "};
       locFull[yc]={title:ytTitle(t),description:descWithKw};
@@ -582,7 +582,7 @@ function decodeHtml(s){
   const txt=document.createElement("textarea");
   txt.innerHTML=s;
   let decoded=txt.value;
-  decoded=decoded.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"").trim();
+  decoded=decoded.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"");
   return decoded||" ";
 }
 // YouTube title: 최대 100자, 제어문자 금지, 빈값 금지
