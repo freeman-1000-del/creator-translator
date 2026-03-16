@@ -164,7 +164,10 @@ const LANGS=[
   {c:"yo",n:"Yorùbá",f:"🇳🇬"},{c:"ha",n:"Hausa",f:"🇳🇬"},{c:"zu",n:"isiZulu",f:"🇿🇦"},
   {c:"ca",n:"Català",f:"🏳️"},{c:"cy",n:"Cymraeg",f:"🏴󠁧󠁢󠁷󠁬󠁳󠁿"},{c:"ga",n:"Gaeilge",f:"🇮🇪"},
   {c:"af",n:"Afrikaans",f:"🇿🇦"},{c:"ne",n:"नेपाली",f:"🇳🇵"},{c:"sl",n:"Slovenščina",f:"🇸🇮"},
-  {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"lb",n:"Lëtzebuergesch",f:"🇱🇺"}
+  {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"lb",n:"Lëtzebuergesch",f:"🇱🇺"},
+  {c:"bs",n:"Bosanski",f:"🇧🇦"},{c:"mt",n:"Malti",f:"🇲🇹"},
+  {c:"be",n:"Беларуская",f:"🇧🇾"},{c:"gl",n:"Galego",f:"🏳️"},
+  {c:"eu",n:"Euskara",f:"🏴"}
 ];
 const CB=[
   ["en","fr","de","es","it","pt","ru","nl","pl","sv"],
@@ -173,7 +176,8 @@ const CB=[
   ["hi","tr","vi","th","id","ms","tl","bn","ur","fa"],
   ["he","ta","te","ml","kn","pa","mn","kk","uz","az"],
   ["ka","hy","my","km","si","sw","am","yo","ha","zu"],
-  ["ca","cy","ga","af","ne","sl","mk","lb"]
+  ["ca","cy","ga","af","ne","sl","mk","lb"],
+  ["bs","mt","be","gl","eu"]
 ];
 
 // YouTube가 실제로 지원하는 언어코드 매핑
@@ -193,7 +197,8 @@ const YT_CODE_MAP={
   "az":"az","ka":"ka","hy":"hy","my":"my","km":"km",
   "si":"si","sw":"sw","am":"am","yo":"yo","ha":"ha",
   "zu":"zu","ca":"ca","cy":"cy","ga":"ga","af":"af",
-  "ne":"ne","sl":"sl","mk":"mk","lb":"lb"
+  "ne":"ne","sl":"sl","mk":"mk","lb":"lb",
+  "bs":"bs","mt":"mt","be":"be","gl":"gl","eu":"eu"
 };
 
 let ti=null,AR={},curP="yt",AT=null;
@@ -358,7 +363,11 @@ async function applyYT(){
 
   // 진단 로그 출력 영역
   const logLines=[];
-  function log(msg){logLines.push(msg);console.log(msg);sb.textContent=logLines.slice(-3).join(" → ");}
+  function log(msg){
+    logLines.push(msg);
+    console.log(msg);
+    document.getElementById("prog-text").textContent=logLines.slice(-1)[0];
+  }
 
   const YT_SAFE=new Set([
     "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
@@ -367,7 +376,7 @@ async function applyYT(){
     "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
     "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
     "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
-    "am","yo","ha","zu","lb"  // 테스트 중
+    "am","yo","ha","zu","lb","bs","mt","be","gl","eu"  // 테스트 중
   ]);
 
   try{
@@ -440,10 +449,8 @@ async function applyYT(){
       const locGood={};goodCodes.forEach(k=>{if(locTitle[k])locGood[k]=locTitle[k];});
       await tryPut(vid,baseSnippet,locGood,AT);
       document.getElementById("progress-bar").style.width="100%";
-      sb.className="status-box err";
-      sb.innerHTML=`⚠ 전체 제목 ${goodCodes.length}개국 등록 완료<br>`
-        +`<small>❌ YouTube가 거부한 언어코드: <b>${badCodes.join(", ")||"없음"}</b><br>`
-        +`✓ 통과된 코드: ${goodCodes.join(", ")}</small>`;
+      sb.className="status-box ok";
+      sb.textContent=`✅ YouTube ${goodCodes.length}개국 제목+설명문 등록 완료!`;
       btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
       return;
     }
@@ -484,8 +491,7 @@ async function applyYT(){
     log("GET으로 실제 저장 검증 중...");
     const verify=await verifyGet(vid,AT);
     sb.className="status-box ok";
-    sb.innerHTML=`✅ YouTube ${verify.count}개국 제목+설명문 등록 완료!<br>`
-      +`<small>등록 언어: ${verify.sample}${verify.count>5?" 외 "+(verify.count-5)+"개":""}</small>`;
+    sb.textContent=`✅ YouTube ${verify.count}개국 제목+설명문 등록 완료!`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
