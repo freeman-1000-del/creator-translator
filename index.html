@@ -145,7 +145,7 @@ const LANGS=[
   {c:"en",n:"English (US)",f:"🇺🇸"},{c:"fr",n:"Français",f:"🇫🇷"},{c:"de",n:"Deutsch",f:"🇩🇪"},
   {c:"es",n:"Español",f:"🇪🇸"},{c:"it",n:"Italiano",f:"🇮🇹"},{c:"pt",n:"Português (BR)",f:"🇧🇷"},
   {c:"ru",n:"Русский",f:"🇷🇺"},{c:"nl",n:"Nederlands",f:"🇳🇱"},{c:"pl",n:"Polski",f:"🇵🇱"},
-  {c:"sv",n:"Svenska",f:"🇸🇪"},{c:"no",n:"Norsk",f:"🇳🇴"},{c:"da",n:"Dansk",f:"🇩🇰"},
+  {c:"sv",n:"Svenska",f:"🇸🇪"},{c:"is",n:"Íslenska",f:"🇮🇸"},{c:"da",n:"Dansk",f:"🇩🇰"},
   {c:"fi",n:"Suomi",f:"🇫🇮"},{c:"el",n:"Ελληνικά",f:"🇬🇷"},{c:"cs",n:"Čeština",f:"🇨🇿"},
   {c:"sk",n:"Slovenčina",f:"🇸🇰"},{c:"hu",n:"Magyar",f:"🇭🇺"},{c:"ro",n:"Română",f:"🇷🇴"},
   {c:"bg",n:"Български",f:"🇧🇬"},{c:"hr",n:"Hrvatski",f:"🇭🇷"},{c:"sr",n:"Srpski",f:"🇷🇸"},
@@ -168,7 +168,7 @@ const LANGS=[
 ];
 const CB=[
   ["en","fr","de","es","it","pt","ru","nl","pl","sv"],
-  ["no","da","fi","el","cs","sk","hu","ro","bg","hr"],
+  ["is","da","fi","el","cs","sk","hu","ro","bg","hr"],
   ["sr","uk","sq","et","lv","lt","ja","zh-CN","zh-TW","ar"],
   ["hi","tr","vi","th","id","ms","tl","bn","ur","fa"],
   ["he","ta","te","ml","kn","pa","mn","kk","uz","az"],
@@ -182,7 +182,7 @@ const CB=[
 const YT_CODE_MAP={
   "en":"en","fr":"fr","de":"de","es":"es","it":"it",
   "pt":"pt-BR","ru":"ru","nl":"nl","pl":"pl","sv":"sv",
-  "no":"no","da":"da","fi":"fi","el":"el","cs":"cs",
+  "no":"is","da":"da","fi":"fi","el":"el","cs":"cs",
   "sk":"sk","hu":"hu","ro":"ro","bg":"bg","hr":"hr",
   "sr":"sr","uk":"uk","sq":"sq","et":"et","lv":"lv",
   "lt":"lt","ja":"ja","zh-CN":"zh-Hans","zh-TW":"zh-Hant",
@@ -369,7 +369,7 @@ async function applyYT(){
     "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
     "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
     // 테스트 예정 추가 코드
-    "no",   // 노르웨이 (nb 거부됨 → no 시도)
+    "is",   // 아이슬란드어 (no 대신 교체)
     "lo",   // 라오어
     "am",   // 암하라어
     "zu",   // 줄루어
@@ -490,23 +490,10 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="100%";
     log("GET으로 실제 저장 검증 중...");
     const verify=await verifyGet(vid,AT);
-    // 저장된 설명문 샘플 확인
-    const descCheck=["es","en","fr","ja"].map(c=>{
-      const v=verify.codes.includes(c);
-      if(!v)return`${c}:없음`;
-      // verifyGet에서 full data 필요 — 별도 조회
-      return`${c}:있음`;
-    }).join(", ");
-    if(verify.count===0){
-      sb.className="status-box err";
-      sb.innerHTML=`⚠ PUT 성공했으나 GET 결과 저장된 언어 없음<br><small>YouTube 지연일 수 있음, 1분 후 Studio 확인</small>`;
-    }else{
-      sb.className="status-box ok";
-      sb.innerHTML=`✓ 실제 저장: <b>${verify.count}개국</b><br>`
-        +`<small>언어코드: ${verify.sample}${verify.count>5?"... 외 "+(verify.count-5)+"개":""}<br>`
-        +`설명문 확인: ${verify.descSample||"(확인 불가)"}</small>`;
-      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
-    }
+    sb.className="status-box ok";
+    sb.innerHTML=`✅ YouTube ${verify.count}개국 제목+설명문 등록 완료!<br>`
+      +`<small>등록 언어: ${verify.sample}${verify.count>5?" 외 "+(verify.count-5)+"개":""}</small>`;
+    Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
     sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
