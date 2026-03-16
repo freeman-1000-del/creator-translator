@@ -343,7 +343,7 @@ async function applyYT(){
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({kind:"youtube#vibody:JSON.stringify({kind:"youtube#video",etag:getData.items[0].etag,id:vid,localizations:existing})deo",id:vid,localizations:existing})
+      body:JSON.stringify({kind:"youtube#video",etag:getData.items[0].etag,id:vid,localizations:existing})
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(putData.error.message);
