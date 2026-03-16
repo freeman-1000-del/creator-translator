@@ -86,7 +86,6 @@ textarea{resize:vertical}
   <div class="logo">🌐</div>
   <div>
     <div class="h1">70개국어 자동 맥락번역기 <span>구글번역 + AI 맥락 최적화</span></div>
-    <div id="completion-msg" style="display:none;font-size:13px;color:#34a853;font-weight:600;margin-top:4px"></div>
   </div>
 </div>
 <div class="ptabs">
@@ -125,7 +124,7 @@ textarea{resize:vertical}
     <button class="cbtn-no" onclick="hideConfirm()">아니오, 설명문 입력</button>
   </div>
 </div>
-<button class="btn-go" id="btn-go"><span id="btn-lbl">70개국 동시 번역 실행</span></button>
+<button class="btn-go" id="btn-go"><span id="btn-lbl">70개국 자동 맥락번역 실행</span></button>
 <button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">✔ 확인</span></button>
 <div class="progress-area" id="progress-area">
   <div class="progress-row">
@@ -366,8 +365,11 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
       grid.appendChild(row);
     });
     document.getElementById("status-box").style.display="none";
-    const msg=document.getElementById("completion-msg");
-    if(msg){msg.textContent=`✓ 번역 완료 — 70개국 / ${tt}초`;msg.style.display="block";}
+    document.getElementById("progress-area").style.display="none";
+    const sb2=document.getElementById("status-box");
+    sb2.className="status-box ok";
+    sb2.textContent=`✓ 번역 완료 — 70개국 / ${tt}초`;
+    sb2.style.display="block";
     document.getElementById("results-title").textContent=`번역 결과`;
     if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
@@ -534,8 +536,10 @@ async function applyYT(){
     const verify=await verifyGet(vid,AT);
     sb.style.display="none";
     sb.style.display="none";
-    const msg=document.getElementById("completion-msg");
-    if(msg){msg.textContent=`✓ 번역+등록 완료 — 70개국 (YouTube ${verify.count}개국 등록)`;msg.style.display="block";}
+    document.getElementById("progress-area").style.display="none";
+    sb.className="status-box ok";
+    sb.textContent=`✓ 번역+등록 완료 — 70개국 (YouTube ${verify.count}개국 등록)`;
+    sb.style.display="block";
     document.getElementById("results-title").textContent=`번역 결과`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
