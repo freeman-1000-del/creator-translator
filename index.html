@@ -334,9 +334,24 @@ async function applyYT(){
 
     const entries=Object.entries(AR);
 
-    // 2. snippet + localizations 한번에 업데이트
-    const snippet=getData.items[0].snippet;
-    snippet.defaultLanguage=snippet.defaultLanguage||"ko";
+    // 2. defaultLanguage 먼저 설정 (snippet 업데이트)
+    const sn=getData.items[0].snippet;
+    if(!sn.defaultLanguage){
+      const snResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`,{
+        method:"PUT",
+        headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
+        body:JSON.stringify({id:vid,snippet:{
+          title:sn.title,
+          description:sn.description||"",
+          categoryId:sn.categoryId,
+          defaultLanguage:"ko"
+        }})
+      });
+      const snData=await snResp.json();
+      if(snData.error)throw new Error("snippet 설정 오류: "+snData.error.message);
+    }
+
+    // 3. localizations만 별도 업데이트
     const existing=getData.items[0].localizations||{};
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
@@ -345,20 +360,10 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="50%";
     document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
 
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({
-        id:vid,
-        snippet:{
-          title:snippet.title,
-          description:snippet.description||"",
-          categoryId:snippet.categoryId||"22",
-          defaultLanguage:"ko",
-          tags:snippet.tags||[]
-        },
-        localizations:existing
-      })
+      body:JSON.stringify({id:vid,localizations:existing})
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(JSON.stringify(putData.error));
