@@ -93,9 +93,19 @@ textarea{resize:vertical}
   <div class="ptab tt" onclick="setPlatform('tt',this)">♪ TikTok</div>
   <div class="ptab ig" onclick="setPlatform('ig',this)">◎ Instagram</div>
 </div>
-<div class="yt-bar">
+<div class="yt-bar" id="platform-bar">
   <div class="yt-bar-info" id="yt-info"><strong>YouTube 자동 적용</strong> — 로그인하면 번역 결과가 자막탭에 자동 등록됩니다</div>
   <button class="btn-yt" id="btn-yt-login" onclick="loginYT()">▶ YouTube 로그인</button>
+</div>
+<div style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:12px;padding:13px 16px;margin-bottom:14px;font-size:13px;color:#5d4037;line-height:1.6" id="tt-notice">
+  <strong>♪ TikTok 맥락번역+키워드 제공</strong><br>
+  70개국 맥락번역 및 해시태그를 언어별로 복사할 수 있습니다.<br>
+  <span style="color:#e65100">⚠ TikTok의 API 차단 정책으로 완전자동 등록은 불가능합니다. 복사 후 수동 입력해주세요.</span>
+</div>
+<div style="display:none;background:#fce4ec;border:1px solid #f48fb1;border-radius:12px;padding:13px 16px;margin-bottom:14px;font-size:13px;color:#4a0011;line-height:1.6" id="ig-notice">
+  <strong>◎ Instagram 맥락번역+키워드 제공</strong><br>
+  70개국 맥락번역 및 해시태그를 언어별로 복사할 수 있습니다.<br>
+  <span style="color:#c62828">⚠ Instagram의 API 차단 정책으로 완전자동 등록은 불가능합니다. 복사 후 수동 입력해주세요.</span>
 </div>
 <div class="card">
   <div class="clabel">URL</div>
@@ -231,7 +241,15 @@ function logoutYT(){
   document.getElementById('btn-apply').style.display='none';
 }
 
-function setPlatform(p,el){curP=p;document.querySelectorAll(".ptab").forEach(t=>t.classList.remove("on"));el.classList.add("on");}
+function setPlatform(p,el){
+  curP=p;
+  document.querySelectorAll(".ptab").forEach(t=>t.classList.remove("on"));
+  el.classList.add("on");
+  // 플랫폼별 공지 표시
+  document.getElementById("platform-bar").style.display=p==="yt"?"flex":"none";
+  document.getElementById("tt-notice").style.display=p==="tt"?"block":"none";
+  document.getElementById("ig-notice").style.display=p==="ig"?"block":"none";
+}
 function hideConfirm(){document.getElementById("confirm-box").style.display="none";document.getElementById("inp-desc").focus();}
 
 // 제목 입력시 원본 언어 자동 감지
