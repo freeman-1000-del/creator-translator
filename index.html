@@ -353,8 +353,12 @@ async function applyYT(){
   document.getElementById("progress-area").style.display="block";
   document.getElementById("progress-bar").style.width="0%";
   const sb=document.getElementById("status-box");
+  sb.className="status-box ok";sb.style.display="block";
 
-  // YouTube localizations 실증 지원 언어코드만
+  // 진단 로그 출력 영역
+  const logLines=[];
+  function log(msg){logLines.push(msg);console.log(msg);sb.textContent=logLines.slice(-3).join(" → ");}
+
   const YT_SAFE=new Set([
     "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
     "nb","da","fi","el","cs","sk","hu","ro","bg","hr",
@@ -366,29 +370,29 @@ async function applyYT(){
   ]);
 
   try{
-    sb.className="status-box ok";sb.textContent="영상 정보 가져오는 중...";sb.style.display="block";
+    log("영상 정보 가져오는 중...");
     const getResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{headers:{"Authorization":"Bearer "+AT}});
     const getData=await getResp.json();
     if(getData.error)throw new Error("영상 조회 오류: "+getData.error.message);
     if(!getData.items||!getData.items[0])throw new Error("영상을 찾을 수 없습니다.");
     const sn=getData.items[0].snippet;
-    document.getElementById("progress-bar").style.width="25%";
-    sb.textContent=`영상 확인: "${sn.title}"`;
+    document.getElementById("progress-bar").style.width="15%";
+    log(`영상 확인: "${sn.title}"`);
 
-    // localizations 구성
+    // 데이터 구성
     const korTitle=document.getElementById("inp-title").value.trim();
     const korDesc=document.getElementById("inp-desc").value.trim();
-    const locFull={};   // 제목+설명
-    const locTitle={};  // 제목만
-    locFull["ko"]={title:ytTitle(korTitle),description:ytDesc(korDesc)};
+    const locTitle={}; // 제목만
+    const locFull={};  // 제목+설명문
     locTitle["ko"]={title:ytTitle(korTitle),description:" "};
+    locFull["ko"]={title:ytTitle(korTitle),description:ytDesc(korDesc)};
     Object.entries(AR).forEach(([code,r])=>{
       const t=(r.cTitle||r.gTitle||"").trim();
       if(!t)return;
       const yc=YT_CODE_MAP[code];
       if(!yc||!YT_SAFE.has(yc))return;
-      locFull[yc]={title:ytTitle(t),description:ytDesc(r.gDesc)};
       locTitle[yc]={title:ytTitle(t),description:" "};
+      locFull[yc]={title:ytTitle(t),description:ytDesc(r.gDesc)};
     });
 
     const baseSnippet={
@@ -398,54 +402,95 @@ async function applyYT(){
       defaultLanguage:"ko",
       tags:Array.isArray(sn.tags)?sn.tags:[]
     };
+    const totalLangs=Object.keys(locTitle).length;
 
-    // ===== 시도 1: 주요 5개국 제목만 (테스트) =====
+    // ━━━━━ STEP 1: 5개국 제목만 ━━━━━
+    document.getElementById("progress-bar").style.width="25%";
     const TEST5=["ko","en","fr","es","ja"];
-    const loc5={};
-    TEST5.forEach(k=>{if(locTitle[k])loc5[k]=locTitle[k];});
-    document.getElementById("progress-bar").style.width="40%";
-    sb.textContent=`시도 1: 주요 5개국 제목만 테스트 중... (${TEST5.join(", ")})`;
+    const loc5={};TEST5.forEach(k=>{if(locTitle[k])loc5[k]=locTitle[k];});
+    log(`STEP1: 5개국 제목 테스트 (${TEST5.join(",")})`);
     let res=await tryPut(vid,baseSnippet,loc5,AT);
-
     if(!res.ok){
       sb.className="status-box err";
-      sb.textContent=`5개국 테스트 실패(${res.err}) — snippet 자체 문제일 수 있음`;
+      sb.innerHTML=`❌ STEP1 실패 — snippet 자체 문제<br><small>오류: ${res.err}<br>제목길이: ${Object.entries(loc5).map(([k,v])=>`${k}:${v.title.length}자`).join(", ")}</small>`;
       btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
       return;
     }
-    sb.textContent=`✓ 5개국 성공! → 전체 ${Object.keys(locTitle).length}개국 제목 등록 중...`;
-    document.getElementById("progress-bar").style.width="60%";
-    await new Promise(r=>setTimeout(r,400));
+    log(`✓ STEP1 성공`);
+    document.getElementById("progress-bar").style.width="40%";
 
-    // ===== 시도 2: 전체 언어 제목만 =====
+    // ━━━━━ STEP 2: 전체 제목만 ━━━━━
+    log(`STEP2: 전체 ${totalLangs}개국 제목 테스트`);
     res=await tryPut(vid,baseSnippet,locTitle,AT);
     if(!res.ok){
-      // 전체 실패 → 5개국만 유지 (이미 성공한 상태)
+      // 실패 언어 진단: 1개씩 테스트
+      const badCodes=[];
+      const goodCodes=["ko","en","fr","es","ja"];
+      const remaining=Object.keys(locTitle).filter(k=>!goodCodes.includes(k));
+      log(`STEP2 실패 → 문제 언어코드 찾는 중...`);
+      for(const code of remaining){
+        const testLoc={};
+        [...goodCodes,code].forEach(k=>{if(locTitle[k])testLoc[k]=locTitle[k];});
+        const sr=await tryPut(vid,baseSnippet,testLoc,AT);
+        if(sr.ok){goodCodes.push(code);}
+        else{badCodes.push(code);console.warn("❌ 거부된 언어코드:",code);}
+      }
+      // 통과된 코드로 최종 등록
+      const locGood={};goodCodes.forEach(k=>{if(locTitle[k])locGood[k]=locTitle[k];});
+      await tryPut(vid,baseSnippet,locGood,AT);
       document.getElementById("progress-bar").style.width="100%";
-      sb.className="status-box ok";
-      sb.textContent=`✓ 5개국 제목 등록됨. 전체 확장 실패(${res.err}) — 설명문 없이 주요국만 유지`;
+      sb.className="status-box err";
+      sb.innerHTML=`⚠ 전체 제목 ${goodCodes.length}개국 등록 완료<br>`
+        +`<small>❌ YouTube가 거부한 언어코드: <b>${badCodes.join(", ")||"없음"}</b><br>`
+        +`✓ 통과된 코드: ${goodCodes.join(", ")}</small>`;
       btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
       return;
     }
-    sb.textContent=`✓ 전체 제목 성공! → 설명문 포함 재등록 중...`;
-    document.getElementById("progress-bar").style.width="80%";
-    await new Promise(r=>setTimeout(r,400));
+    log(`✓ STEP2 성공`);
+    document.getElementById("progress-bar").style.width="65%";
 
-    // ===== 시도 3: 전체 언어 제목+설명문 =====
+    // ━━━━━ STEP 3: 전체 제목+설명문 ━━━━━
+    log(`STEP3: 전체 ${totalLangs}개국 제목+설명문 테스트`);
     res=await tryPut(vid,baseSnippet,locFull,AT);
-    if(res.ok){
+    if(!res.ok){
+      // 설명문이 문제 → 언어별로 설명문 진단
+      const badDescCodes=[];
+      const goodDescCodes=["ko"]; // ko부터 시작
+      const others=Object.keys(locFull).filter(k=>k!=="ko");
+      log(`STEP3 실패 → 설명문 문제 언어 찾는 중...`);
+      for(const code of others){
+        const testLoc={};
+        [...goodDescCodes,code].forEach(k=>{if(locFull[k])testLoc[k]=locFull[k];});
+        const sr=await tryPut(vid,baseSnippet,testLoc,AT);
+        if(sr.ok){goodDescCodes.push(code);}
+        else{
+          badDescCodes.push(code);
+          // 해당 언어는 제목만 등록
+          console.warn("❌ 설명문 거부 언어:",code,"설명문 앞 50자:",locFull[code]?.description?.substring(0,50));
+        }
+      }
+      // 통과된 코드는 설명문 포함, 나머지는 제목만
+      const locMixed={};
+      goodDescCodes.forEach(k=>{if(locFull[k])locMixed[k]=locFull[k];});
+      badDescCodes.forEach(k=>{if(locTitle[k])locMixed[k]=locTitle[k];});
+      await tryPut(vid,baseSnippet,locMixed,AT);
       document.getElementById("progress-bar").style.width="100%";
-      sb.className="status-box ok";
-      sb.textContent=`✓ ${Object.keys(locFull).length}개국 제목+설명문 전체 등록 완료!`;
-      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
-    }else{
-      document.getElementById("progress-bar").style.width="100%";
-      sb.className="status-box ok";
-      sb.textContent=`✓ ${Object.keys(locTitle).length}개국 제목 등록 완료 (설명문 제외됨: ${res.err})`;
-      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
+      sb.className="status-box err";
+      sb.innerHTML=`⚠ 등록 완료 (설명문 일부 제외)<br>`
+        +`<small>설명문 거부 언어: <b>${badDescCodes.join(", ")||"없음"}</b><br>`
+        +`설명문 포함 등록: ${goodDescCodes.length}개국 / 제목만: ${badDescCodes.length}개국</small>`;
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
+      return;
     }
+
+    // ━━━━━ 전체 완료 ━━━━━
+    document.getElementById("progress-bar").style.width="100%";
+    sb.className="status-box ok";
+    sb.textContent=`✓ ${totalLangs}개국 제목+설명문 전체 등록 완료!`;
+    Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
+
   }catch(e){
-    sb.className="status-box err";sb.textContent=e.message;sb.style.display="block";
+    sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
   btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
 }
