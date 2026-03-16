@@ -381,7 +381,7 @@ async function applyYT(){
       if(!t||t.trim()==="")return;
       const ytCode=ytCodeMap[code];
       if(!ytCode)return; // 지원하지 않는 코드 건너뜀
-      localizations[ytCode]={title:t.trim(),description:(r.gDesc||"").trim()||" "};
+      localizations[ytCode]={title:t.trim(),description:""};
     });
     const fullBody={
       kind:"youtube#video",
