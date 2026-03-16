@@ -458,13 +458,13 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="65%";
 
     // ━━━━━ STEP 3: 전체 제목+설명문 ━━━━━
-    // 설명문 샘플 디버그 (콘솔)
+    // 설명문 샘플 디버그 — 화면에 직접 표시
     const sampleCodes=["es","en","fr","ja","de"];
-    sampleCodes.forEach(c=>{
-      if(locFull[c]){
-        console.log(`[설명문 샘플] ${c}:`,JSON.stringify(locFull[c].description?.substring(0,80)));
-      }
-    });
+    const descSamples=sampleCodes.map(c=>
+      locFull[c]?`${c}: "${(locFull[c].description||"").substring(0,40)}"`:""
+    ).filter(Boolean).join("\n");
+    sb.innerHTML=`STEP3 직전 설명문 내용 확인:<br><small style="font-family:monospace;white-space:pre">${descSamples.replace(/\n/g,"<br>")}</small>`;
+    await new Promise(r=>setTimeout(r,3000)); // 3초 표시
     // 설명문이 실제로 있는지 확인
     const hasDesc=Object.values(locFull).some(v=>v.description&&v.description.trim().length>1);
     if(!hasDesc){
