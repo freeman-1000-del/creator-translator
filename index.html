@@ -324,60 +324,63 @@ async function applyYT(){
   document.getElementById("progress-bar").className="progress-bar-fill bar-apply";
   document.getElementById("progress-area").style.display="block";
   document.getElementById("progress-bar").style.width="0%";
+  const sb=document.getElementById("status-box");
   try{
-    // 1. 현재 영상 정보 가져오기
+    // STEP 1: 영상 정보 가져오기
+    sb.className="status-box ok";sb.textContent="1단계: 영상 정보 가져오는 중...";sb.style.display="block";
     const getResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{
       headers:{"Authorization":"Bearer "+AT}
     });
     const getData=await getResp.json();
-    if(!getData.items||!getData.items[0])throw new Error("영상을 찾을 수 없습니다. URL을 확인해주세요.");
-
-    const entries=Object.entries(AR);
-
-    // 2. defaultLanguage 먼저 설정 (snippet 업데이트)
+    if(getData.error)throw new Error("영상 조회 오류: "+getData.error.message);
+    if(!getData.items||!getData.items[0])throw new Error("영상을 찾을 수 없습니다.");
+    
     const sn=getData.items[0].snippet;
+    sb.textContent=`영상 확인: "${sn.title}" | defaultLanguage: ${sn.defaultLanguage||"없음"} | categoryId: ${sn.categoryId}`;
+    document.getElementById("progress-bar").style.width="25%";
+    await new Promise(r=>setTimeout(r,1000));
+
+    // STEP 2: defaultLanguage 설정
     if(!sn.defaultLanguage){
+      sb.textContent="2단계: defaultLanguage 설정 중...";
+      const snBody={id:vid,snippet:{title:sn.title,description:sn.description||"",categoryId:sn.categoryId,defaultLanguage:"ko"}};
       const snResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`,{
         method:"PUT",
         headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-        body:JSON.stringify({id:vid,snippet:{
-          title:sn.title,
-          description:sn.description||"",
-          categoryId:sn.categoryId,
-          defaultLanguage:"ko"
-        }})
+        body:JSON.stringify(snBody)
       });
       const snData=await snResp.json();
-      if(snData.error)throw new Error("snippet 설정 오류: "+snData.error.message);
+      if(snData.error)throw new Error("snippet 오류: "+JSON.stringify(snData.error));
+      sb.textContent="defaultLanguage 설정 완료!";
+      document.getElementById("progress-bar").style.width="50%";
+      await new Promise(r=>setTimeout(r,500));
     }
 
-    // 3. localizations만 별도 업데이트
+    // STEP 3: localizations 업데이트
+    sb.textContent="3단계: 자막탭 등록 중...";
+    const entries=Object.entries(AR);
     const existing=getData.items[0].localizations||{};
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
     });
-
-    document.getElementById("progress-bar").style.width="50%";
-    document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
-
+    const locBody={id:vid,localizations:existing};
     const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({id:vid,localizations:existing})
+      body:JSON.stringify(locBody)
     });
     const putData=await putResp.json();
-    if(putData.error)throw new Error(JSON.stringify(putData.error));
+    if(putData.error)throw new Error("localizations 오류: "+JSON.stringify(putData.error));
 
     document.getElementById("progress-bar").style.width="100%";
-    document.getElementById("prog-text").textContent=`${entries.length}개국 YouTube 자막탭 등록 완료!`;
+    document.getElementById("prog-text").textContent=`${entries.length}개국 등록 완료!`;
     entries.forEach(([code])=>{
       const ob=document.getElementById("ob_r_"+code.replace(/[^a-zA-Z0-9]/g,"_"));
       if(ob)ob.style.display="inline-flex";
     });
-    const sb=document.getElementById("status-box");
     sb.className="status-box ok";sb.textContent=`✓ YouTube 자막탭 ${entries.length}개국 등록 완료!`;sb.style.display="block";
   }catch(e){
-    const sb=document.getElementById("status-box");sb.className="status-box err";sb.textContent="YouTube 등록 오류: "+e.message;sb.style.display="block";
+    sb.className="status-box err";sb.textContent=e.message;sb.style.display="block";
   }
   btn.disabled=false;document.getElementById("apply-lbl").textContent="▶ YouTube 자막탭 자동 등록";
 }
