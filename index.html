@@ -459,9 +459,9 @@ async function applyYT(){
 
     const baseSnippet={
       title:ytTitle(sn.title),
-      description:ytDesc(korDesc||sn.description),
+      description:origDescWithKw, // ★ 키워드 포함한 설명문
       categoryId:String(sn.categoryId||"22"),
-      defaultLanguage:ytOrigLang, // ★ 선택된 원본 언어
+      defaultLanguage:ytOrigLang,
       tags:Array.isArray(sn.tags)?sn.tags:[]
     };
     const totalLangs=Object.keys(locTitle).length;
