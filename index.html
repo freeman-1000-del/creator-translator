@@ -142,6 +142,7 @@ textarea{resize:vertical}
 const GK="AIzaSyDbmScuw7OWmolYKMpVwQnF3mOJVgHC1Bc";
 const CID="814006479687-1rk3j7p24e2p7k4nliiu8viu5bkf517g.apps.googleusercontent.com";
 const LANGS=[
+  {c:"ko",n:"한국어 (원본)",f:"🇰🇷"},
   {c:"en",n:"English (US)",f:"🇺🇸"},{c:"fr",n:"Français",f:"🇫🇷"},{c:"de",n:"Deutsch",f:"🇩🇪"},
   {c:"es",n:"Español",f:"🇪🇸"},{c:"it",n:"Italiano",f:"🇮🇹"},{c:"pt",n:"Português (BR)",f:"🇧🇷"},
   {c:"ru",n:"Русский",f:"🇷🇺"},{c:"nl",n:"Nederlands",f:"🇳🇱"},{c:"pl",n:"Polski",f:"🇵🇱"},
@@ -276,6 +277,8 @@ async function startTranslate(nd){
     document.getElementById("progress-bar").className="progress-bar-fill bar-claude";
     document.getElementById("progress-bar").style.width="50%";
     gr.forEach(({lang,title:t,desc:d})=>{AR[lang.c]={lang,gTitle:t,gDesc:d,cTitle:"",cAlt:"",keywords:"",tags:[]};});
+    // ★ 원본어(한국어) AR에 포함 — 전 세계 공통: 원본어 집계 포함
+    AR["ko"]={lang:{c:"ko",n:"한국어",f:"🇰🇷"},gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:"",tags:[]};
     const cd={count:0,total:LANGS.length};
     await Promise.all(CB.map(async(codes)=>{
       const vc=codes.filter(c=>AR[c]&&AR[c].gTitle);if(!vc.length)return;
@@ -336,13 +339,14 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
         <button class="copy-btn" onclick="copyRow('${id}')">복사</button>`;
       grid.appendChild(row);
     });
-    sb.className="status-box ok";sb.style.display="none"; // 중복 숨김
+    document.getElementById("status-box").style.display="none";
     document.getElementById("results-title").textContent=
-      `번역+등록 완료 — ${Object.keys(AR).length}개국 / ${tt}초`;
+      `번역 완료 — 70개국 / ${tt}초  (실제 ${Object.keys(AR).length}개국 처리)`;
     if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
     clearInterval(ti);
-    const sb=document.getElementById("status-box");sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
+    const sb=document.getElementById("status-box");
+    sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
   btn.disabled=false;document.getElementById("btn-lbl").textContent="70개국 동시 번역 실행";
 }
@@ -491,8 +495,8 @@ async function applyYT(){
     log("GET으로 실제 저장 검증 중...");
     const verify=await verifyGet(vid,AT);
     sb.style.display="none";
-    document.getElementById("results-title").textContent=
-      `번역+등록 완료 — ${verify.count}개국 / ${tt||""}초`;
+    const rtitle=document.getElementById("results-title");
+    if(rtitle)rtitle.textContent=`번역+등록 완료 — 70개국  (실제 YouTube ${verify.count}개국 등록)`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
