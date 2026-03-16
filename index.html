@@ -333,17 +333,20 @@ async function applyYT(){
     if(!getData.items||!getData.items[0])throw new Error("영상을 찾을 수 없습니다. URL을 확인해주세요.");
     // 2. 기존 localizations에 새 번역 추가
     const existing=getData.items[0].localizations||{};
+    const snippet=getData.items[0].snippet||{};
     const entries=Object.entries(AR);
     entries.forEach(([code,r])=>{
       existing[code]={title:r.cTitle||r.gTitle,description:r.gDesc||""};
     });
+    // defaultLanguage 설정 (없으면 ko로 설정)
+    if(!snippet.defaultLanguage)snippet.defaultLanguage="ko";
     document.getElementById("progress-bar").style.width="50%";
     document.getElementById("prog-text").textContent="YouTube 자막탭에 등록 중...";
-    // 3. 업데이트
-    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet`,{
+    // 3. snippet + localizations 함께 전송
+    const putResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
       method:"PUT",
       headers:{"Authorization":"Bearer "+AT,"Content-Type":"application/json"},
-      body:JSON.stringify({kind:"youtube#video",etag:getData.items[0].etag,id:vid,snippet:getData.items[0].snippet,localizations:existing})
+      body:JSON.stringify({id:vid,snippet:snippet,localizations:existing})
     });
     const putData=await putResp.json();
     if(putData.error)throw new Error(putData.error.message);
