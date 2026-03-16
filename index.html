@@ -491,11 +491,20 @@ async function applyYT(){
       return;
     }
 
-    // ━━━━━ 전체 완료 ━━━━━
+    // ━━━━━ 전체 완료 — GET으로 실제 저장 검증 ━━━━━
     document.getElementById("progress-bar").style.width="100%";
-    sb.className="status-box ok";
-    sb.textContent=`✓ ${totalLangs}개국 제목+설명문 전체 등록 완료!`;
-    Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
+    log("GET으로 실제 저장 검증 중...");
+    const verify=await verifyGet(vid,AT);
+    if(verify.count===0){
+      sb.className="status-box err";
+      sb.innerHTML=`⚠ PUT은 성공했으나 GET 검증 결과 저장된 언어 없음<br>`
+        +`<small>YouTube API 지연일 수 있습니다. 30초 후 Studio에서 확인해보세요.</small>`;
+    }else{
+      sb.className="status-box ok";
+      sb.innerHTML=`✓ 실제 저장 확인: <b>${verify.count}개국</b> 등록됨<br>`
+        +`<small>확인된 언어: ${verify.sample}${verify.count>5?"... 외 "+(verify.count-5)+"개":""}</small>`;
+      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
+    }
 
   }catch(e){
     sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
@@ -512,8 +521,23 @@ async function tryPut(vid,snippet,localizations,token){
     });
     const data=await resp.json();
     if(data.error)return{ok:false,err:data.error.errors?.[0]?.reason||data.error.message};
-    return{ok:true};
+    // PUT 응답에서 실제 저장된 localizations 수 확인
+    const savedCount=Object.keys(data.localizations||{}).length;
+    return{ok:true,savedCount,data};
   }catch(e){return{ok:false,err:e.message};}
+}
+
+// PUT 후 GET으로 실제 저장 검증
+async function verifyGet(vid,token){
+  try{
+    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{
+      headers:{"Authorization":"Bearer "+token}
+    });
+    const data=await resp.json();
+    const loc=data.items?.[0]?.localizations||{};
+    const codes=Object.keys(loc);
+    return{count:codes.length,codes,sample:codes.slice(0,5).join(", ")};
+  }catch(e){return{count:0,codes:[],sample:"확인 실패"};}
 }
 
 // HTML 엔티티 디코딩 + YouTube 필드 정제
