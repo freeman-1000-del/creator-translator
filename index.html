@@ -360,12 +360,28 @@ async function applyYT(){
     const entries=Object.entries(AR);
     sb.textContent="3단계: 전체 언어 등록 중...";
     const sn2=getData.items[0].snippet;
-    // 전체 localizations 구성
+    // YouTube 지원 언어 코드 매핑 (잘못된 코드 제외)
+    const ytCodeMap={
+      "en":"en","fr":"fr","de":"de","es":"es","it":"it",
+      "pt":"pt","ru":"ru","nl":"nl","pl":"pl","sv":"sv",
+      "no":"no","da":"da","fi":"fi","el":"el","cs":"cs",
+      "sk":"sk","hu":"hu","ro":"ro","bg":"bg","hr":"hr",
+      "uk":"uk","et":"et","lv":"lv","lt":"lt",
+      "ja":"ja","ar":"ar","hi":"hi","tr":"tr","vi":"vi",
+      "th":"th","id":"id","ms":"ms","bn":"bn",
+      "fa":"fa","he":"he","ta":"ta","te":"te","ml":"ml",
+      "kn":"kn","mn":"mn","kk":"kk","uz":"uz","az":"az",
+      "ka":"ka","hy":"hy","sw":"sw","af":"af","ne":"ne",
+      "sl":"sl","mk":"mk","sq":"sq","sr":"sr",
+      "zh-CN":"zh-CN","zh-TW":"zh-TW"
+    };
     const localizations={};
     entries.forEach(([code,r])=>{
       const t=r.cTitle||r.gTitle;
       if(!t||t.trim()==="")return;
-      localizations[code]={title:t.trim(),description:(r.gDesc||"").trim()||" "};
+      const ytCode=ytCodeMap[code];
+      if(!ytCode)return; // 지원하지 않는 코드 건너뜀
+      localizations[ytCode]={title:t.trim(),description:(r.gDesc||"").trim()||" "};
     });
     const fullBody={
       kind:"youtube#video",
