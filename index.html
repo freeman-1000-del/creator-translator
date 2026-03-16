@@ -357,6 +357,7 @@ async function applyYT(){
     }
 
     // STEP 3: 영어 1개만 먼저 테스트
+    const entries=Object.entries(AR);
     sb.textContent="3단계: 영어 1개 테스트 등록 중...";
     const enTitle=AR["en"]?AR["en"].cTitle||AR["en"].gTitle:"Test Title";
     const enDesc=AR["en"]?AR["en"].gDesc||"":" ";
