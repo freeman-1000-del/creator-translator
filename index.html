@@ -145,7 +145,7 @@ const LANGS=[
   {c:"en",n:"English (US)",f:"🇺🇸"},{c:"fr",n:"Français",f:"🇫🇷"},{c:"de",n:"Deutsch",f:"🇩🇪"},
   {c:"es",n:"Español",f:"🇪🇸"},{c:"it",n:"Italiano",f:"🇮🇹"},{c:"pt",n:"Português (BR)",f:"🇧🇷"},
   {c:"ru",n:"Русский",f:"🇷🇺"},{c:"nl",n:"Nederlands",f:"🇳🇱"},{c:"pl",n:"Polski",f:"🇵🇱"},
-  {c:"sv",n:"Svenska",f:"🇸🇪"},{c:"is",n:"Íslenska",f:"🇮🇸"},{c:"da",n:"Dansk",f:"🇩🇰"},
+  {c:"sv",n:"Svenska",f:"🇸🇪"},{c:"bs",n:"Bosanski",f:"🇧🇦"},{c:"da",n:"Dansk",f:"🇩🇰"},
   {c:"fi",n:"Suomi",f:"🇫🇮"},{c:"el",n:"Ελληνικά",f:"🇬🇷"},{c:"cs",n:"Čeština",f:"🇨🇿"},
   {c:"sk",n:"Slovenčina",f:"🇸🇰"},{c:"hu",n:"Magyar",f:"🇭🇺"},{c:"ro",n:"Română",f:"🇷🇴"},
   {c:"bg",n:"Български",f:"🇧🇬"},{c:"hr",n:"Hrvatski",f:"🇭🇷"},{c:"sr",n:"Srpski",f:"🇷🇸"},
@@ -164,25 +164,25 @@ const LANGS=[
   {c:"yo",n:"Yorùbá",f:"🇳🇬"},{c:"ha",n:"Hausa",f:"🇳🇬"},{c:"zu",n:"isiZulu",f:"🇿🇦"},
   {c:"ca",n:"Català",f:"🏳️"},{c:"cy",n:"Cymraeg",f:"🏴󠁧󠁢󠁷󠁬󠁳󠁿"},{c:"ga",n:"Gaeilge",f:"🇮🇪"},
   {c:"af",n:"Afrikaans",f:"🇿🇦"},{c:"ne",n:"नेपाली",f:"🇳🇵"},{c:"sl",n:"Slovenščina",f:"🇸🇮"},
-  {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"lo",n:"ລາວ",f:"🇱🇦"}
+  {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"lb",n:"Lëtzebuergesch",f:"🇱🇺"}
 ];
 const CB=[
   ["en","fr","de","es","it","pt","ru","nl","pl","sv"],
-  ["is","da","fi","el","cs","sk","hu","ro","bg","hr"],
+  ["bs","da","fi","el","cs","sk","hu","ro","bg","hr"],
   ["sr","uk","sq","et","lv","lt","ja","zh-CN","zh-TW","ar"],
   ["hi","tr","vi","th","id","ms","tl","bn","ur","fa"],
   ["he","ta","te","ml","kn","pa","mn","kk","uz","az"],
   ["ka","hy","my","km","si","sw","am","yo","ha","zu"],
-  ["ca","cy","ga","af","ne","sl","mk","lo"]
+  ["ca","cy","ga","af","ne","sl","mk","lb"]
 ];
 
 // YouTube가 실제로 지원하는 언어코드 매핑
 // YouTube localizations BCP-47 코드 매핑
-// nb(노르웨이 Bokmål) → YouTube 거부 확인, no로 변경 테스트
+// YouTube localizations BCP-47 코드 매핑
 const YT_CODE_MAP={
   "en":"en","fr":"fr","de":"de","es":"es","it":"it",
   "pt":"pt-BR","ru":"ru","nl":"nl","pl":"pl","sv":"sv",
-  "no":"is","da":"da","fi":"fi","el":"el","cs":"cs",
+  "bs":"bs","da":"da","fi":"fi","el":"el","cs":"cs",
   "sk":"sk","hu":"hu","ro":"ro","bg":"bg","hr":"hr",
   "sr":"sr","uk":"uk","sq":"sq","et":"et","lv":"lv",
   "lt":"lt","ja":"ja","zh-CN":"zh-Hans","zh-TW":"zh-Hant",
@@ -193,7 +193,7 @@ const YT_CODE_MAP={
   "az":"az","ka":"ka","hy":"hy","my":"my","km":"km",
   "si":"si","sw":"sw","am":"am","yo":"yo","ha":"ha",
   "zu":"zu","ca":"ca","cy":"cy","ga":"ga","af":"af",
-  "ne":"ne","sl":"sl","mk":"mk","lo":"lo"
+  "ne":"ne","sl":"sl","mk":"mk","lb":"lb"
 };
 
 let ti=null,AR={},curP="yt",AT=null;
@@ -361,20 +361,13 @@ async function applyYT(){
   function log(msg){logLines.push(msg);console.log(msg);sb.textContent=logLines.slice(-3).join(" → ");}
 
   const YT_SAFE=new Set([
-    // 확인된 63개국
     "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
-    "da","fi","el","cs","sk","hu","ro","bg","hr",
+    "bs","da","fi","el","cs","sk","hu","ro","bg","hr",
     "sr","uk","sq","et","lv","lt","ja","zh-Hans","zh-Hant",
     "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
     "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
     "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
-    // 테스트 예정 추가 코드
-    "is",   // 아이슬란드어 (no 대신 교체)
-    "lo",   // 라오어
-    "am",   // 암하라어
-    "zu",   // 줄루어
-    "yo",   // 요루바어
-    "ha",   // 하우사어
+    "am","yo","ha","zu","lb"  // 테스트 중
   ]);
 
   try{
