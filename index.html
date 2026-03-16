@@ -405,7 +405,7 @@ async function applyYT(){
 
     const baseSnippet={
       title:ytTitle(sn.title),
-      description:ytDesc(sn.description),
+      description:ytDesc(korDesc||sn.description), // ★ 입력한 한국어 설명문 우선
       categoryId:String(sn.categoryId||"22"),
       defaultLanguage:"ko",
       tags:Array.isArray(sn.tags)?sn.tags:[]
