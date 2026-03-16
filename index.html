@@ -376,12 +376,15 @@ async function applyYT(){
       "zh-CN":"zh-CN","zh-TW":"zh-TW"
     };
     const localizations={};
+    let count=0;
     entries.forEach(([code,r])=>{
+      if(count>=2)return; // 2개만 테스트
       const t=r.cTitle||r.gTitle;
       if(!t||t.trim()==="")return;
       const ytCode=ytCodeMap[code];
-      if(!ytCode)return; // 지원하지 않는 코드 건너뜀
+      if(!ytCode)return;
       localizations[ytCode]={title:t.trim(),description:""};
+      count++;
     });
     const fullBody={
       kind:"youtube#video",
