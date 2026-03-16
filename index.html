@@ -164,10 +164,9 @@ const LANGS=[
   {c:"yo",n:"Yorùbá",f:"🇳🇬"},{c:"ha",n:"Hausa",f:"🇳🇬"},{c:"zu",n:"isiZulu",f:"🇿🇦"},
   {c:"ca",n:"Català",f:"🏳️"},{c:"cy",n:"Cymraeg",f:"🏴󠁧󠁢󠁷󠁬󠁳󠁿"},{c:"ga",n:"Gaeilge",f:"🇮🇪"},
   {c:"af",n:"Afrikaans",f:"🇿🇦"},{c:"ne",n:"नेपाली",f:"🇳🇵"},{c:"sl",n:"Slovenščina",f:"🇸🇮"},
-  {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"lb",n:"Lëtzebuergesch",f:"🇱🇺"},
+  {c:"mk",n:"Македонски",f:"🇲🇰"},
   {c:"bs",n:"Bosanski",f:"🇧🇦"},{c:"mt",n:"Malti",f:"🇲🇹"},
-  {c:"be",n:"Беларуская",f:"🇧🇾"},{c:"gl",n:"Galego",f:"🏳️"},
-  {c:"eu",n:"Euskara",f:"🏴"}
+  {c:"be",n:"Беларуская",f:"🇧🇾"}
 ];
 const CB=[
   ["en","fr","de","es","it","pt","ru","nl","pl","sv"],
@@ -176,8 +175,8 @@ const CB=[
   ["hi","tr","vi","th","id","ms","tl","bn","ur","fa"],
   ["he","ta","te","ml","kn","pa","mn","kk","uz","az"],
   ["ka","hy","my","km","si","sw","am","yo","ha","zu"],
-  ["ca","cy","ga","af","ne","sl","mk","lb"],
-  ["bs","mt","be","gl","eu"]
+  ["ca","cy","ga","af","ne","sl","mk"],
+  ["bs","mt","be"]
 ];
 
 // YouTube가 실제로 지원하는 언어코드 매핑
@@ -197,8 +196,8 @@ const YT_CODE_MAP={
   "az":"az","ka":"ka","hy":"hy","my":"my","km":"km",
   "si":"si","sw":"sw","am":"am","yo":"yo","ha":"ha",
   "zu":"zu","ca":"ca","cy":"cy","ga":"ga","af":"af",
-  "ne":"ne","sl":"sl","mk":"mk","lb":"lb",
-  "bs":"bs","mt":"mt","be":"be","gl":"gl","eu":"eu"
+  "ne":"ne","sl":"sl","mk":"mk",
+  "bs":"bs","mt":"mt","be":"be"
 };
 
 let ti=null,AR={},curP="yt",AT=null;
@@ -337,8 +336,9 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
         <button class="copy-btn" onclick="copyRow('${id}')">복사</button>`;
       grid.appendChild(row);
     });
-    const sb=document.getElementById("status-box");
-    sb.className="status-box ok";sb.textContent=`✓ 완료 — ${Object.keys(AR).length}개국 / 총 ${tt}초`;sb.style.display="block";
+    sb.className="status-box ok";sb.style.display="none"; // 중복 숨김
+    document.getElementById("results-title").textContent=
+      `번역+등록 완료 — ${Object.keys(AR).length}개국 / ${tt}초`;
     if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
     clearInterval(ti);
@@ -376,7 +376,7 @@ async function applyYT(){
     "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
     "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
     "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
-    "am","yo","ha","zu","lb","bs","mt","be","gl","eu"  // 테스트 중
+    "am","yo","ha","zu","bs","mt","be"  // 테스트 중
   ]);
 
   try{
@@ -490,8 +490,9 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="100%";
     log("GET으로 실제 저장 검증 중...");
     const verify=await verifyGet(vid,AT);
-    sb.className="status-box ok";
-    sb.textContent=`✅ YouTube ${verify.count}개국 제목+설명문 등록 완료!`;
+    sb.style.display="none";
+    document.getElementById("results-title").textContent=
+      `번역+등록 완료 — ${verify.count}개국 / ${tt||""}초`;
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
 
   }catch(e){
