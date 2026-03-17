@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>70개국어 자동 맥락번역기 — 로그인</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.wrap{width:100%;max-width:420px;padding:20px;}
+.card{background:white;border-radius:20px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.logo{text-align:center;margin-bottom:28px;}
+.logo .icon{font-size:40px;margin-bottom:8px;}
+.logo h1{font-size:20px;font-weight:800;color:#0f2744;}
+.logo p{font-size:13px;color:#888;margin-top:4px;}
+.tabs{display:flex;background:#f0f4f8;border-radius:10px;padding:4px;margin-bottom:24px;}
+.tab{flex:1;padding:9px;text-align:center;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;color:#888;transition:.2s;}
+.tab.on{background:white;color:#0f2744;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;}
+.field input{width:100%;padding:12px 14px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:14px;outline:none;transition:.2s;}
+.field input:focus{border-color:#0f2744;}
+.btn{width:100%;padding:14px;background:#0f2744;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:.2s;}
+.btn:hover{background:#1a3a5c;}
+.btn:disabled{background:#ccc;cursor:not-allowed;}
+.msg{font-size:13px;padding:10px 14px;border-radius:8px;margin-top:12px;display:none;}
+.msg.err{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.msg.ok{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
+.divider{text-align:center;color:#aaa;font-size:12px;margin:16px 0;position:relative;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#eee;}
+.divider::before{left:0;}
+.divider::after{right:0;}
+.plan-info{background:#f8faff;border:1px solid #dbe4ff;border-radius:10px;padding:14px;margin-top:16px;font-size:12px;color:#555;line-height:1.6;}
+.plan-info strong{color:#0f2744;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="icon">🌐</div>
+      <h1>70개국어 자동 맥락번역기</h1>
+      <p>AI 맥락번역 + YouTube 자동 등록</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab on" id="tab-login" onclick="switchTab('login')">로그인</div>
+      <div class="tab" id="tab-signup" onclick="switchTab('signup')">회원가입</div>
+    </div>
+
+    <div id="form-login">
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="login-email" placeholder="이메일 입력">
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" id="login-pw" placeholder="비밀번호 입력">
+      </div>
+      <button class="btn" id="btn-login" onclick="doLogin()">로그인</button>
+      <div class="msg" id="login-msg"></div>
+    </div>
+
+    <div id="form-signup" style="display:none">
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="signup-email" placeholder="이메일 입력">
+      </div>
+      <div class="field">
+        <label>비밀번호 (6자 이상)</label>
+        <input type="password" id="signup-pw" placeholder="비밀번호 입력">
+      </div>
+      <div class="field">
+        <label>비밀번호 확인</label>
+        <input type="password" id="signup-pw2" placeholder="비밀번호 재입력">
+      </div>
+      <button class="btn" id="btn-signup" onclick="doSignup()">회원가입</button>
+      <div class="msg" id="signup-msg"></div>
+
+      <div class="plan-info">
+        <strong>무료 플랜</strong> — 가입 즉시 사용 가능<br>
+        ✓ 70개국 맥락번역<br>
+        ✓ YouTube 크롬 익스텐션 자동 등록<br>
+        ✓ TikTok / Instagram 번역+복사
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(t) {
+  document.getElementById('tab-login').className = 'tab' + (t==='login'?' on':'');
+  document.getElementById('tab-signup').className = 'tab' + (t==='signup'?' on':'');
+  document.getElementById('form-login').style.display = t==='login'?'block':'none';
+  document.getElementById('form-signup').style.display = t==='signup'?'block':'none';
+}
+
+function showMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'msg ' + type;
+  el.style.display = 'block';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pw').value;
+  if (!email || !password) return showMsg('login-msg', '이메일과 비밀번호를 입력해주세요.', 'err');
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = '로그인 중...';
+
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'login', email, password})
+    });
+    const data = await r.json();
+    if (data.success) {
+      localStorage.setItem('ct_token', data.token);
+      localStorage.setItem('ct_email', data.email);
+      localStorage.setItem('ct_plan', data.plan);
+      showMsg('login-msg', '로그인 성공! 번역기로 이동합니다...', 'ok');
+      setTimeout(() => window.location.href = '/', 1000);
+    } else {
+      showMsg('login-msg', data.error, 'err');
+      btn.disabled = false; btn.textContent = '로그인';
+    }
+  } catch(e) {
+    showMsg('login-msg', '오류가 발생했습니다.', 'err');
+    btn.disabled = false; btn.textContent = '로그인';
+  }
+}
+
+async function doSignup() {
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-pw').value;
+  const pw2 = document.getElementById('signup-pw2').value;
+
+  if (!email || !password) return showMsg('signup-msg', '모든 항목을 입력해주세요.', 'err');
+  if (password.length < 6) return showMsg('signup-msg', '비밀번호는 6자 이상이어야 합니다.', 'err');
+  if (password !== pw2) return showMsg('signup-msg', '비밀번호가 일치하지 않습니다.', 'err');
+
+  const btn = document.getElementById('btn-signup');
+  btn.disabled = true; btn.textContent = '가입 중...';
+
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'signup', email, password})
+    });
+    const data = await r.json();
+    if (data.success) {
+      localStorage.setItem('ct_token', data.token);
+      localStorage.setItem('ct_email', data.email);
+      localStorage.setItem('ct_plan', data.plan);
+      showMsg('signup-msg', '가입 완료! 번역기로 이동합니다...', 'ok');
+      setTimeout(() => window.location.href = '/', 1000);
+    } else {
+      showMsg('signup-msg', data.error, 'err');
+      btn.disabled = false; btn.textContent = '회원가입';
+    }
+  } catch(e) {
+    showMsg('signup-msg', '오류가 발생했습니다.', 'err');
+    btn.disabled = false; btn.textContent = '회원가입';
+  }
+}
+
+// Enter 키
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('form-login').style.display !== 'none') doLogin();
+    else doSignup();
+  }
+});
+
+// 이미 로그인된 경우
+if (localStorage.getItem('ct_token')) {
+  window.location.href = '/';
+}
+</script>
+</body>
+</html>
