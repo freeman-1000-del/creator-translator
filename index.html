@@ -396,6 +396,17 @@ Return ONLY valid JSON, no markdown:
       grid.appendChild(row);
     });
     if(AT){document.getElementById("btn-apply").style.display="flex";}
+
+    // ★ 크롬 익스텐션으로 번역 데이터 전달
+    try{
+      if(typeof chrome!=="undefined"&&chrome.runtime&&chrome.storage){
+        chrome.storage.local.set({
+          translationData: AR,
+          translationTime: Date.now()
+        });
+        console.log("✓ 크롬 익스텐션으로 번역 데이터 전달 완료");
+      }
+    }catch(e){}
   }catch(e){
     clearInterval(ti);
     const sb=document.getElementById("status-box");
