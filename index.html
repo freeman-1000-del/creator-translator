@@ -310,10 +310,9 @@ async function startTranslate(nd){
     document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
     const cd={count:0,total:LANGS.length};
 
-    // 순차 처리 (429 rate limit 방지)
-    for(const codes of CB){
+    await Promise.all(CB.map(async(codes)=>{
       const vc=codes.filter(c=>c!==origLang);
-      if(!vc.length)continue;
+      if(!vc.length)return;
       const targetLangs=vc.map(c=>{const l=LANGS.find(x=>x.c===c);return `${c}(${l?.n||c})`;}).join(", ");
       const prompt=`You are a professional ${pname} content translator with deep cultural expertise.
 Your mission: Faithfully convey the ORIGINAL AUTHOR'S INTENT (90%+ accuracy) while making it sound natural in the target language.
@@ -337,10 +336,10 @@ CRITICAL: DO NOT add or expand. Preserve original. Respect the author.
 
 Return ONLY valid JSON, no markdown:
 {${vc.map(c=>`"${c}":{"title":"","desc":"","keywords":"","tags":[]}`).join(",")}}`;      try{
-        const r=await fetch("/api/claude",{
+        const r=await fetch("/api/translate",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:4000,messages:[{role:"user",content:prompt}]})
+          body:JSON.stringify({max_tokens:4000,messages:[{role:"user",content:prompt}]})
         });
         if(data.error){
           console.error("Claude API 오류:", data.error);
@@ -367,9 +366,7 @@ Return ONLY valid JSON, no markdown:
           cd.count++;
         });
       }
-      // 배치 간 딜레이 (429 방지)
-      await new Promise(r=>setTimeout(r,500));
-    }
+    }));
 
     clearInterval(ti);
     const tt=((Date.now()-st)/1000).toFixed(1);
