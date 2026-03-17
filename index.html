@@ -186,20 +186,29 @@ const LANGS=[
   {c:"mk",n:"Македонски",f:"🇲🇰"},{c:"mt",n:"Malti",f:"🇲🇹"},{c:"be",n:"Беларуская",f:"🇧🇾"}
 ];
 const CB=[
-  ["en","fr","de","es","it"],
-  ["pt","ru","nl","pl","sv"],
-  ["bs","da","fi","el","cs"],
-  ["sk","hu","ro","bg","hr"],
-  ["sr","uk","sq","et","lv"],
-  ["lt","ja","zh-CN","zh-TW","ar"],
-  ["hi","tr","vi","th","id"],
-  ["ms","tl","bn","ur","fa"],
-  ["he","ta","te","ml","kn"],
-  ["pa","mn","kk","uz","az"],
-  ["ka","hy","my","km","si"],
-  ["sw","am","yo","ha","zu"],
-  ["ca","cy","ga","af","ne"],
-  ["sl","mk","mt","be"]
+  ["en","fr","de"],
+  ["es","it","pt"],
+  ["ru","nl","pl"],
+  ["sv","bs","da"],
+  ["fi","el","cs"],
+  ["sk","hu","ro"],
+  ["bg","hr","sr"],
+  ["uk","sq","et"],
+  ["lv","lt","ja"],
+  ["zh-CN","zh-TW","ar"],
+  ["hi","tr","vi"],
+  ["th","id","ms"],
+  ["tl","bn","ur"],
+  ["fa","he","ta"],
+  ["te","ml","kn"],
+  ["pa","mn","kk"],
+  ["uz","az","ka"],
+  ["hy","my","km"],
+  ["si","sw","am"],
+  ["yo","ha","zu"],
+  ["ca","cy","ga"],
+  ["af","ne","sl"],
+  ["mk","mt","be"]
 ];
 const YT_CODE_MAP={
   "en":"en","fr":"fr","de":"de","es":"es","it":"it",
@@ -318,7 +327,7 @@ Your mission: Faithfully convey the ORIGINAL AUTHOR'S INTENT (90%+ accuracy) whi
 
 SOURCE CONTENT:
 Title: "${title}"
-${desc?`Description: "${desc.substring(0,300)}"`:""}
+${desc?`Description: "${desc.substring(0,200)}"`:""}
 ${keywords?`Keywords: "${keywords}"`:""}
 
 TARGET LANGUAGES: ${targetLangs}
