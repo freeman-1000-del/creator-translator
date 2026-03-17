@@ -529,10 +529,18 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="100%";
     const verify=await verifyGet(vid,AT);
     document.getElementById("progress-area").style.display="none";
-    const descMsg=verify.hasDesc?`설명문 ${verify.descCount}개국 저장됨`:"⚠ 설명문 저장 안됨 (YouTube API 제한)";
-    sb.className="status-box ok";sb.textContent=`✓ 완료 — YouTube ${verify.count}개국 제목 등록 / ${descMsg}`;sb.style.display="block";
-    console.log("실제 저장된 샘플 제목:", verify.sampleTitle);
-    console.log("실제 저장된 샘플 설명:", verify.sampleDesc);
+    // ★ 화면에 상세 진단 표시
+    const arDescCount=Object.values(AR).filter(r=>r.gDesc&&r.gDesc.trim()).length;
+    const locDescCount=Object.values(locFull).filter(v=>v.description&&v.description.trim()&&v.description!==" ").length;
+    const sampleEn=locFull["en"]||locFull["ko"]||Object.values(locFull)[0]||{};
+    const sampleDesc=(sampleEn.description||"(없음)").substring(0,60);
+    sb.className="status-box ok";
+    sb.innerHTML=`✓ ${verify.count}개국 등록 완료<br>
+      <b>번역 설명문 보유:</b> ${arDescCount}개국<br>
+      <b>YouTube 전송 설명문:</b> ${locDescCount}개국<br>
+      <b>API 응답 설명문:</b> ${verify.hasDesc?"있음("+verify.descCount+"개국)":"없음"}<br>
+      <b>영어 샘플:</b> ${sampleDesc}`;
+    sb.style.display="block";
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
   }catch(e){sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";}
   btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
