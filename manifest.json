@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "70개국 자동 맥락번역기",
+  "version": "1.0",
+  "description": "70개국 맥락번역 결과를 YouTube Studio에 자동 등록합니다",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://studio.youtube.com/*",
+    "https://creator-translator.vercel.app/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://studio.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
