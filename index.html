@@ -310,9 +310,10 @@ async function startTranslate(nd){
     document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
     const cd={count:0,total:LANGS.length};
 
-    await Promise.all(CB.map(async(codes)=>{
+    // 순차 처리 (429 rate limit 방지)
+    for(const codes of CB){
       const vc=codes.filter(c=>c!==origLang);
-      if(!vc.length)return;
+      if(!vc.length)continue;
       const targetLangs=vc.map(c=>{const l=LANGS.find(x=>x.c===c);return `${c}(${l?.n||c})`;}).join(", ");
       const prompt=`You are a professional ${pname} content translator with deep cultural expertise.
 Your mission: Faithfully convey the ORIGINAL AUTHOR'S INTENT (90%+ accuracy) while making it sound natural in the target language.
@@ -366,7 +367,9 @@ Return ONLY valid JSON, no markdown:
           cd.count++;
         });
       }
-    }));
+      // 배치 간 딜레이 (429 방지)
+      await new Promise(r=>setTimeout(r,500));
+    }
 
     clearInterval(ti);
     const tt=((Date.now()-st)/1000).toFixed(1);
@@ -399,14 +402,13 @@ Return ONLY valid JSON, no markdown:
 
     // ★ 크롬 익스텐션으로 번역 데이터 전달
     try{
-      if(typeof chrome!=="undefined"&&chrome.runtime&&chrome.storage){
-        chrome.storage.local.set({
-          translationData: AR,
-          translationTime: Date.now()
-        });
-        console.log("✓ 크롬 익스텐션으로 번역 데이터 전달 완료");
-      }
-    }catch(e){}
+      window.postMessage({
+        type:"TRANSLATION_COMPLETE",
+        data: AR,
+        time: Date.now()
+      }, "*");
+      console.log("✓ 크롬 익스텐션으로 번역 데이터 전달 완료");
+    }catch(e){console.warn("익스텐션 전달 실패:",e);}
   }catch(e){
     clearInterval(ti);
     const sb=document.getElementById("status-box");
