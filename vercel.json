@@ -1,22 +1,6 @@
 {
-  "functions": {
-    "api/claude.js": {
-      "maxDuration": 60
-    },
-    "api/auth.js": {
-      "maxDuration": 10
-    },
-    "api/translate.js": {
-      "maxDuration": 60
-    },
-    "api/auth/callback.js": {
-      "maxDuration": 10
-    }
-  },
-  "routes": [
-    { "src": "/login", "dest": "/login.html" },
-    { "src": "/login.html", "dest": "/login.html" },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
