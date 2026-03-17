@@ -375,6 +375,8 @@ Return ONLY valid JSON, no markdown:
           cd.count++;
         });
       }
+      // 배치 간 1초 딜레이 (rate limit 방지)
+      await new Promise(r=>setTimeout(r,1000));
     }
 
     clearInterval(ti);
