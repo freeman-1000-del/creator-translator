@@ -87,6 +87,10 @@ textarea{resize:vertical}
   <div>
     <div class="h1">70개국어 자동 맥락번역기 <span>구글번역 + AI 맥락 최적화</span></div>
   </div>
+  <div id="user-info" style="margin-left:auto;font-size:12px;color:#aaa;display:flex;align-items:center;gap:10px;">
+    <span id="user-email"></span>
+    <button onclick="doLogout()" style="font-size:11px;padding:4px 10px;border:1px solid #ddd;border-radius:6px;background:white;cursor:pointer;color:#666;">로그아웃</button>
+  </div>
 </div>
 <div class="ptabs">
   <div class="ptab yt on" onclick="setPlatform('yt',this)">▶ YouTube</div>
@@ -219,7 +223,21 @@ const YT_CODE_MAP={
   "bs":"bs","mt":"mt","be":"be"
 };
 
-let ti=null,AR={},curP="yt",AT=null;
+// 로그인 체크 (임시 비활성화)
+// (function(){
+//   const token = localStorage.getItem('ct_token');
+//   if (!token) { window.location.href = '/login.html'; return; }
+//   const email = localStorage.getItem('ct_email');
+//   const plan = localStorage.getItem('ct_plan');
+//   if (email) document.getElementById('user-email').textContent = email + (plan === 'pro' ? ' ★PRO' : ' (무료)');
+// })();
+
+function doLogout() {
+  localStorage.removeItem('ct_token');
+  localStorage.removeItem('ct_email');
+  localStorage.removeItem('ct_plan');
+  window.location.href = '/login.html';
+}
 
 window.addEventListener('load',()=>{
   const p=new URLSearchParams(window.location.search);
