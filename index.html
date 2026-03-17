@@ -318,7 +318,7 @@ async function startTranslate(nd){
     document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
     const cd={count:0,total:LANGS.length};
 
-    for(const codes of CB){
+    await Promise.all(CB.map(async(codes)=>{
       const vc=codes.filter(c=>c!==origLang);
       if(!vc.length)return;
       const targetLangs=vc.map(c=>{const l=LANGS.find(x=>x.c===c);return `${c}(${l?.n||c})`;}).join(", ");
@@ -375,9 +375,7 @@ Return ONLY valid JSON, no markdown:
           cd.count++;
         });
       }
-      // 배치 간 1초 딜레이 (rate limit 방지)
-      await new Promise(r=>setTimeout(r,1000));
-    }
+    }));
 
     clearInterval(ti);
     const tt=((Date.now()-st)/1000).toFixed(1);
