@@ -124,8 +124,8 @@ textarea{resize:vertical}
   <textarea id="inp-desc" rows="5" placeholder="영상 하단의 설명문을 복사하여 여기에 붙여 넣으세요."></textarea>
 </div>
 <div class="card">
-  <div class="clabel">키워드 <span style="font-weight:600;color:#e53935">* 필수</span> <span style="font-weight:400;color:#aaa">— 설명문 하단에 자동 추가</span></div>
-  <input type="text" id="inp-keywords" placeholder="예: 피아노 bgm 공부 힐링 수면 독서 집중 lofi 음악" required>
+  <div class="clabel">키워드 <span style="font-weight:400;color:#aaa">— 설명문 하단에 자동 추가 (선택사항)</span></div>
+  <input type="text" id="inp-keywords" placeholder="예: 피아노 bgm 공부 힐링 수면 독서 집중 lofi 음악">
 </div>
 <div class="confirm-box" id="confirm-box" style="display:none">
   <p>설명문이 없습니다. 계속 진행하시겠습니까?<br><small style="color:#856404">설명문 없이 진행하면 제목만 번역됩니다.</small></p>
@@ -271,8 +271,6 @@ document.getElementById("inp-title").addEventListener("blur", async function(){
 document.getElementById("btn-go").addEventListener("click",function(){
   const t=document.getElementById("inp-title").value.trim();
   if(!t){alert("제목을 입력해주세요.");return;}
-  const k=document.getElementById("inp-keywords").value.trim();
-  if(!k){alert("키워드를 입력해주세요.\n예: 피아노 bgm 공부 힐링 수면");return;}
   const d=document.getElementById("inp-desc").value.trim();
   if(!d){document.getElementById("confirm-box").style.display="block";return;}
   startTranslate(false);
