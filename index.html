@@ -476,6 +476,12 @@ async function applyYT(){
       tags:Array.isArray(sn.tags)?sn.tags:[]
     };
     const totalLangs=Object.keys(locFull).length;
+    // ★ 진단: AR 데이터에 description 있는지 확인
+    const arWithDesc=Object.entries(AR).filter(([k,v])=>v.gDesc&&v.gDesc.trim()).length;
+    const locWithDesc=Object.values(locFull).filter(v=>v.description&&v.description.trim()&&v.description!==" ").length;
+    console.log(`[진단] AR 설명문 있는 언어: ${arWithDesc}개 / locFull 설명문 있는 언어: ${locWithDesc}개`);
+    const sampleLoc=locFull["en"]||locFull["ko"]||Object.values(locFull)[0];
+    console.log("[진단] locFull 샘플:", JSON.stringify(sampleLoc));
     document.getElementById("progress-bar").style.width="25%";
 
     // ★ STEP1: 5개국 제목+설명문 테스트
@@ -514,7 +520,10 @@ async function applyYT(){
     document.getElementById("progress-bar").style.width="100%";
     const verify=await verifyGet(vid,AT);
     document.getElementById("progress-area").style.display="none";
-    sb.className="status-box ok";sb.textContent=`✓ 완료 — YouTube ${verify.count}개국 제목+설명문 등록`;sb.style.display="block";
+    const descMsg=verify.hasDesc?`설명문 ${verify.descCount}개국 저장됨`:"⚠ 설명문 저장 안됨 (YouTube API 제한)";
+    sb.className="status-box ok";sb.textContent=`✓ 완료 — YouTube ${verify.count}개국 제목 등록 / ${descMsg}`;sb.style.display="block";
+    console.log("실제 저장된 샘플 제목:", verify.sampleTitle);
+    console.log("실제 저장된 샘플 설명:", verify.sampleDesc);
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
   }catch(e){sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";}
   btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
@@ -534,8 +543,13 @@ async function verifyGet(vid,token){
     const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{headers:{"Authorization":"Bearer "+token}});
     const data=await resp.json();
     const loc=data.items?.[0]?.localizations||{};
-    return{count:Object.keys(loc).length};
-  }catch(e){return{count:0};}
+    const count=Object.keys(loc).length;
+    // 실제 저장된 내용 확인
+    const sample=loc["en"]||loc["ko"]||Object.values(loc)[0]||{};
+    const hasDesc=Object.values(loc).some(v=>v.description&&v.description.trim()&&v.description.trim()!==" ");
+    const descCount=Object.values(loc).filter(v=>v.description&&v.description.trim()&&v.description.trim()!==" ").length;
+    return{count,hasDesc,descCount,sampleTitle:sample.title||"",sampleDesc:sample.description||""};
+  }catch(e){return{count:0,hasDesc:false,descCount:0};}
 }
 
 // ★ FIX: ytDesc 강화 — 빈 문자열도 공백 " " 로 보장, 제어문자 제거
