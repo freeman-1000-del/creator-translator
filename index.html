@@ -338,9 +338,12 @@ Return ONLY this JSON, nothing else:
         const r=await fetch("/api/claude",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:4000,messages:[{role:"user",content:prompt}]})
+          body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:4000,messages:[{role:"user",content:prompt}]})
         });
         const data=await r.json();
+        if(data.error){
+          console.error("Claude API 오류:", data.error);
+        }
         let raw=(data.content||[]).map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
         let res={};
         try{res=JSON.parse(raw);}catch(e){console.warn("JSON parse fail:",raw.substring(0,100));}
@@ -457,7 +460,7 @@ async function applyYT(){
       || AR["en"]?.keywords
       || Object.values(AR).find(r=>r.keywords)?.keywords
       || "";
-    const origDescWithKw=origKeywords
+    const origDescWithKw=origKeywords && !ytDesc(korDesc).includes(origKeywords)
       ? ytDesc(korDesc+"\n\n"+origKeywords)
       : ytDesc(korDesc);
 
@@ -477,7 +480,7 @@ async function applyYT(){
       const yc=YT_CODE_MAP[code];
       if(!yc||!YT_SAFE.has(yc))return;
       // 번역어도 키워드 설명문 하단에 추가
-      const descWithKw=r.keywords
+      const descWithKw=r.keywords && r.gDesc && !r.gDesc.includes(r.keywords)
         ? ytDesc(r.gDesc+"\n\n"+r.keywords)
         : ytDesc(r.gDesc);
       locTitle[yc]={title:ytTitle(t),description:" "};
