@@ -521,11 +521,24 @@ async function applyYT(){
 
 async function tryPut(vid,snippet,localizations,token){
   try{
-    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{method:"PUT",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({kind:"youtube#video",id:vid,snippet,localizations})});
+    const body={kind:"youtube#video",id:vid,snippet,localizations};
+    // ★ 진단: 전송 데이터 콘솔 출력
+    const langCount=Object.keys(localizations).length;
+    const sampleKey=Object.keys(localizations)[0];
+    const sampleVal=localizations[sampleKey];
+    console.log(`[tryPut] 전송 ${langCount}개국 — 샘플 "${sampleKey}":`, JSON.stringify(sampleVal));
+    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{method:"PUT",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify(body)});
     const data=await resp.json();
-    if(data.error)return{ok:false,err:data.error.errors?.[0]?.reason||data.error.message};
-    return{ok:true,savedCount:Object.keys(data.localizations||{}).length,data};
-  }catch(e){return{ok:false,err:e.message};}
+    if(data.error){
+      console.error("[tryPut] 오류:", JSON.stringify(data.error));
+      return{ok:false,err:data.error.errors?.[0]?.reason||data.error.message};
+    }
+    // ★ 진단: 응답 localizations 샘플 출력
+    const savedLoc=data.localizations||{};
+    const savedSample=savedLoc[sampleKey];
+    console.log(`[tryPut] 저장됨 ${Object.keys(savedLoc).length}개국 — 응답 샘플 "${sampleKey}":`, JSON.stringify(savedSample));
+    return{ok:true,savedCount:Object.keys(savedLoc).length,data};
+  }catch(e){console.error("[tryPut] 예외:",e);return{ok:false,err:e.message};}
 }
 
 async function verifyGet(vid,token){
