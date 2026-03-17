@@ -152,7 +152,6 @@ textarea{resize:vertical}
 </div>
 </div>
 <script>
-/* ★ 수정1: curP, AT, AR, ti 전역변수 선언 */
 let curP="yt";
 let AT=null;
 let AR={};
@@ -342,7 +341,6 @@ Return ONLY valid JSON, no markdown:
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({max_tokens:4000,messages:[{role:"user",content:prompt}]})
         });
-        /* ★ 수정2: 이 줄이 빠져있었음 */
         const data=await r.json();
         if(data.error){console.error("Claude API 오류:",data.error);}
         let raw=(data.content||[]).map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
@@ -449,56 +447,73 @@ async function applyYT(){
     const manualKeywords=document.getElementById("inp-keywords").value.trim();
     const origAR=AR[origLang];
     const origKeywords=manualKeywords||origAR?.keywords||AR["en"]?.keywords||Object.values(AR).find(r=>r.keywords)?.keywords||"";
-    const origDescWithKw=origKeywords&&!ytDesc(korDesc).includes(origKeywords)?ytDesc(korDesc+"\n\n"+origKeywords):ytDesc(korDesc);
-    const locTitle={};
+    const origDescWithKw=origKeywords&&korDesc&&!korDesc.includes(origKeywords)?ytDesc(korDesc+"\n\n"+origKeywords):ytDesc(korDesc);
+
+    // ★ FIX: locFull 에 description 포함 (locTitle 별도 불필요 — locFull 로 통일)
     const locFull={};
-    locTitle[ytOrigLang]={title:ytTitle(korTitle),description:" "};
     locFull[ytOrigLang]={title:ytTitle(korTitle),description:origDescWithKw};
+
     Object.entries(AR).forEach(([code,r])=>{
       if(code===origLang)return;
       const t=(r.cTitle||r.gTitle||"").trim();
       if(!t)return;
       const yc=YT_CODE_MAP[code];
       if(!yc||!YT_SAFE.has(yc))return;
-      const descWithKw=r.keywords&&r.gDesc&&!r.gDesc.includes(r.keywords)?ytDesc(r.gDesc+"\n\n"+r.keywords):ytDesc(r.gDesc);
-      locTitle[yc]={title:ytTitle(t),description:" "};
+      // ★ FIX: description 항상 포함 (빈 경우 공백 " " 로 보장)
+      const rawDesc=(r.gDesc||"").trim();
+      const descWithKw=r.keywords&&rawDesc&&!rawDesc.includes(r.keywords)
+        ?ytDesc(rawDesc+"\n\n"+r.keywords)
+        :ytDesc(rawDesc);
       locFull[yc]={title:ytTitle(t),description:descWithKw};
     });
-    const baseSnippet={title:ytTitle(sn.title),description:origDescWithKw,categoryId:String(sn.categoryId||"22"),defaultLanguage:ytOrigLang,tags:Array.isArray(sn.tags)?sn.tags:[]};
-    const totalLangs=Object.keys(locTitle).length;
+
+    const baseSnippet={
+      title:ytTitle(sn.title),
+      description:origDescWithKw,
+      categoryId:String(sn.categoryId||"22"),
+      defaultLanguage:ytOrigLang,
+      tags:Array.isArray(sn.tags)?sn.tags:[]
+    };
+    const totalLangs=Object.keys(locFull).length;
     document.getElementById("progress-bar").style.width="25%";
+
+    // ★ STEP1: 5개국 제목+설명문 테스트
     const TEST5=["ko","en","fr","es","ja"];
-    const loc5={};TEST5.forEach(k=>{if(locTitle[k])loc5[k]=locTitle[k];});
-    log(`STEP1: 5개국 제목 테스트`);
+    const loc5={};TEST5.forEach(k=>{if(locFull[k])loc5[k]=locFull[k];});
+    log(`STEP1: 5개국 제목+설명문 테스트`);
     let res=await tryPut(vid,baseSnippet,loc5,AT);
     if(!res.ok){sb.className="status-box err";sb.innerHTML=`❌ STEP1 실패 — ${res.err}`;btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";return;}
     log(`✓ STEP1 성공`);
     document.getElementById("progress-bar").style.width="40%";
-    log(`STEP2: 전체 ${totalLangs}개국 제목 테스트`);
-    res=await tryPut(vid,baseSnippet,locTitle,AT);
+
+    // ★ STEP2: 전체 언어 제목+설명문 일괄 등록
+    log(`STEP2: 전체 ${totalLangs}개국 제목+설명문 등록`);
+    res=await tryPut(vid,baseSnippet,locFull,AT);
     if(!res.ok){
+      // ★ FIX: fallback 에서도 locFull(설명문 포함) 사용
+      log(`일부 언어 오류 — 개별 검증 시작`);
       const goodCodes=["ko","en","fr","es","ja"];
-      const remaining=Object.keys(locTitle).filter(k=>!goodCodes.includes(k));
+      const remaining=Object.keys(locFull).filter(k=>!goodCodes.includes(k));
       for(const code of remaining){
-        const testLoc={};[...goodCodes,code].forEach(k=>{if(locTitle[k])testLoc[k]=locTitle[k];});
+        const testLoc={};[...goodCodes,code].forEach(k=>{if(locFull[k])testLoc[k]=locFull[k];});
         const sr=await tryPut(vid,baseSnippet,testLoc,AT);
         if(sr.ok)goodCodes.push(code);else console.warn("❌ 거부된 언어코드:",code);
       }
-      const locGood={};goodCodes.forEach(k=>{if(locTitle[k])locGood[k]=locTitle[k];});
+      const locGood={};
+      // ★ FIX: 최종 등록도 locFull (설명문 포함)
+      goodCodes.forEach(k=>{if(locFull[k])locGood[k]=locFull[k];});
       await tryPut(vid,baseSnippet,locGood,AT);
       document.getElementById("progress-bar").style.width="100%";
-      sb.className="status-box ok";sb.textContent=`✅ YouTube ${goodCodes.length}개국 등록 완료!`;
+      document.getElementById("progress-area").style.display="none";
+      sb.className="status-box ok";sb.textContent=`✅ YouTube ${goodCodes.length}개국 제목+설명문 등록 완료!`;
+      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
       btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";return;
     }
     log(`✓ STEP2 성공`);
-    document.getElementById("progress-bar").style.width="65%";
-    log(`STEP3: 전체 ${totalLangs}개국 제목+설명문 등록`);
-    res=await tryPut(vid,baseSnippet,locFull,AT);
-    if(!res.ok){sb.className="status-box err";sb.innerHTML=`❌ STEP3 실패 — ${res.err}`;btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";return;}
     document.getElementById("progress-bar").style.width="100%";
     const verify=await verifyGet(vid,AT);
     document.getElementById("progress-area").style.display="none";
-    sb.className="status-box ok";sb.textContent=`✓ 번역+등록 완료 — YouTube ${verify.count}개국 등록`;sb.style.display="block";
+    sb.className="status-box ok";sb.textContent=`✓ 완료 — YouTube ${verify.count}개국 제목+설명문 등록`;sb.style.display="block";
     Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
   }catch(e){sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";}
   btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
@@ -522,14 +537,22 @@ async function verifyGet(vid,token){
   }catch(e){return{count:0};}
 }
 
-function decodeHtml(s){
-  if(!s||!s.trim())return" ";
-  const txt=document.createElement("textarea");txt.innerHTML=s;
-  let d=txt.value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"");
-  return d||" ";
+// ★ FIX: ytDesc 강화 — 빈 문자열도 공백 " " 로 보장, 제어문자 제거
+function sanitizeForYT(s){
+  if(!s||!s.trim())return " ";
+  // 제어문자 제거 (줄바꿈 \n, \r 은 유지)
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"").trim()||" ";
 }
-function ytTitle(s){let t=decodeHtml(s);if(t.length>100)t=t.substring(0,97)+"...";return t||"(제목 없음)";}
-function ytDesc(s){let d=decodeHtml(s);if(d.length>4900)d=d.substring(0,4900);return d||" ";}
+function ytTitle(s){
+  let t=sanitizeForYT(s);
+  if(t.length>100)t=t.substring(0,97)+"...";
+  return t||"(제목 없음)";
+}
+function ytDesc(s){
+  let d=sanitizeForYT(s);
+  if(d.length>4900)d=d.substring(0,4900);
+  return d;
+}
 
 function copyRow(id){
   const lc=Object.keys(AR).find(k=>k.replace(/[^a-zA-Z0-9]/g,"_")===id.replace("r_",""));
