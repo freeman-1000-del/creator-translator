@@ -182,14 +182,20 @@ const LANGS=[
   {c:"be",n:"Беларуская",f:"🇧🇾"}
 ];
 const CB=[
-  ["en","fr","de","es","it","pt","ru","nl","pl","sv"],
-  ["bs","da","fi","el","cs","sk","hu","ro","bg","hr"],
-  ["sr","uk","sq","et","lv","lt","ja","zh-CN","zh-TW","ar"],
-  ["hi","tr","vi","th","id","ms","tl","bn","ur","fa"],
-  ["he","ta","te","ml","kn","pa","mn","kk","uz","az"],
-  ["ka","hy","my","km","si","sw","am","yo","ha","zu"],
-  ["ca","cy","ga","af","ne","sl","mk"],
-  ["bs","mt","be"]
+  ["en","fr","de","es","it"],
+  ["pt","ru","nl","pl","sv"],
+  ["bs","da","fi","el","cs"],
+  ["sk","hu","ro","bg","hr"],
+  ["sr","uk","sq","et","lv"],
+  ["lt","ja","zh-CN","zh-TW","ar"],
+  ["hi","tr","vi","th","id"],
+  ["ms","tl","bn","ur","fa"],
+  ["he","ta","te","ml","kn"],
+  ["pa","mn","kk","uz","az"],
+  ["ka","hy","my","km","si"],
+  ["sw","am","yo","ha","zu"],
+  ["ca","cy","ga","af","ne"],
+  ["sl","mk","mt","be"]
 ];
 
 // YouTube가 실제로 지원하는 언어코드 매핑
@@ -313,7 +319,7 @@ Your mission: Faithfully convey the ORIGINAL AUTHOR'S INTENT (90%+ accuracy) whi
 
 SOURCE CONTENT:
 Title: "${title}"
-${desc?`Description: "${desc.substring(0,500)}"`:""}
+${desc?`Description: "${desc.substring(0,300)}"`:""}
 ${keywords?`Keywords: "${keywords}"`:""}
 
 TARGET LANGUAGES: ${targetLangs}
@@ -323,18 +329,13 @@ TRANSLATION PRINCIPLES:
 2. NATURAL LANGUAGE: Polish the sentences to sound natural — NOT word-for-word, but NOT creative rewriting
 3. TITLE: Keep the same structure and meaning. MAX 100 chars. Preserve brand names exactly.
 4. DESCRIPTION: Translate with respect for the original author's voice. Same length, same sections, same emotional journey.
-5. KEYWORDS: 8-10 actual local search terms in the target language that match the content theme
-6. TAGS: ${pname==="YouTube"?"5 YouTube SEO tags":pname==="TikTok"?"4 hashtags":"8 hashtags"}
+5. KEYWORDS: 5 actual local search terms in the target language
+6. TAGS: ${pname==="YouTube"?"3 YouTube SEO tags":pname==="TikTok"?"3 hashtags":"5 hashtags"}
 
-CRITICAL:
-- DO NOT add, invent, or expand content beyond the original
-- DO NOT remove any part of the original message
-- Treat the original author's words with deep respect
-- The reader should feel the same emotion as the original
+CRITICAL: DO NOT add or expand. Preserve original. Respect the author.
 
 Return ONLY valid JSON, no markdown:
-{${vc.map(c=>`"${c}":{"title":"","desc":"","keywords":"","tags":[]}`).join(",")}}`;
-      try{
+{${vc.map(c=>`"${c}":{"title":"","desc":"","keywords":"","tags":[]}`).join(",")}}`;      try{
         const r=await fetch("/api/claude",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
