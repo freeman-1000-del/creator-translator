@@ -136,7 +136,7 @@ textarea{resize:vertical}
 </div>
 <button class="btn-go" id="btn-go"><span id="btn-lbl">70개국 자동 맥락번역 실행</span></button>
 <div class="status-box" id="status-box"></div>
-<button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">✔ 확인</span></button>
+<button class="btn-apply" id="btn-apply" onclick="applyYT()"><span id="apply-lbl">✔ 확인 (YouTube 자막등록)</span></button>
 <div class="progress-area" id="progress-area">
   <div class="progress-row">
     <div class="spin-sm"></div>
@@ -282,7 +282,8 @@ async function startTranslate(nd){
   document.getElementById("confirm-box").style.display="none";
   const title=document.getElementById("inp-title").value.trim();
   const desc=nd?"":document.getElementById("inp-desc").value.trim();
-  const origLang=document.getElementById("inp-lang").value; // ★ 원본 언어
+  const keywords=document.getElementById("inp-keywords").value.trim();
+  const origLang=document.getElementById("inp-lang").value;
   const origLangInfo=LANGS.find(l=>l.c===origLang)||{c:origLang,n:origLang,f:"🏳️"};
   const pname={yt:"YouTube",tt:"TikTok",ig:"Instagram"}[curP];
   const btn=document.getElementById("btn-go");
@@ -292,91 +293,98 @@ async function startTranslate(nd){
   document.getElementById("results-grid").innerHTML="";
   document.getElementById("progress-area").style.display="block";
   document.getElementById("progress-bar").style.width="0%";
-  document.getElementById("progress-bar").className="progress-bar-fill bar-google";
+  document.getElementById("progress-bar").className="progress-bar-fill bar-claude";
   document.getElementById("btn-apply").style.display="none";
   AR={};let el=0;clearInterval(ti);
   ti=setInterval(()=>{el+=0.1;document.getElementById("timer").textContent=el.toFixed(1)+"초";},100);
   const st=Date.now();
-  const texts=desc?[title,desc.substring(0,500)]:[title];
+
+  // 원본어 먼저 AR에 추가
+  AR[origLang]={lang:origLangInfo,gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:keywords,tags:[]};
+
   try{
-    document.getElementById("prog-text").textContent="구글 번역 실행 중...";
-    let done=0;
-    const gr=await Promise.all(LANGS.map(async(lang)=>{
-      try{
-        const r=await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GK}`,
-          {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({q:texts,target:lang.c,format:"text"})});
-        const d=await r.json();
-        if(d.error)return{lang,title:"",desc:""};
-        const tr=d.data.translations;
-        done++;document.getElementById("progress-bar").style.width=Math.round(done/LANGS.length*50)+"%";
-        return{lang,title:tr[0]?.translatedText||"",desc:desc?tr[1]?.translatedText||"":""};
-      }catch(e){return{lang,title:"",desc:""};}
-    }));
-    const gt=((Date.now()-st)/1000).toFixed(1);
-    document.getElementById("prog-text").textContent=`구글 번역 완료 (${gt}초) → AI 맥락 최적화 중...`;
-    document.getElementById("progress-bar").className="progress-bar-fill bar-claude";
-    document.getElementById("progress-bar").style.width="50%";
-    gr.forEach(({lang,title:t,desc:d})=>{AR[lang.c]={lang,gTitle:t,gDesc:d,cTitle:"",cAlt:"",keywords:"",tags:[]};});
-    // ★ 원본어 AR에 포함 — Claude 배치에서 키워드 생성되도록
-    AR[origLang]={lang:origLangInfo,gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:"",tags:[]};
-    const cd={count:0,total:LANGS.length+1}; // +1 원본어 포함
+    document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
+    const cd={count:0,total:LANGS.length};
+
     await Promise.all(CB.map(async(codes)=>{
-      const vc=codes.filter(c=>AR[c]&&AR[c].gTitle);if(!vc.length)return;
-      const li=vc.map(c=>{const r=AR[c];return `${c}(${r.lang.n}): title="${r.gTitle}"${r.gDesc?`, desc="${r.gDesc.substring(0,120)}"`:""}`}).join("\n");
-      const prompt=`Expert creator localizer for ${pname}. Google translated. Now optimize:
-1. Title for CTR/cultural appeal — STRICT MAX 100 characters (count carefully)
-2. Alt title for A/B test — also MAX 100 characters
-3. 10 local SEO keywords (space-separated)
-4. ${pname==="YouTube"?"5-7 SEO tags":pname==="TikTok"?"3-5 hashtags":"8-10 hashtags"}
-RULES: Keep structure. No added content. Preserve brands. TITLE MUST BE UNDER 100 CHARS.
-Languages:\n${li}\nSource: "${title}"
-JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":[]}`).join(",")}}`;
+      const vc=codes.filter(c=>c!==origLang);
+      if(!vc.length)return;
+      const targetLangs=vc.map(c=>{const l=LANGS.find(x=>x.c===c);return `${c}(${l?.n||c})`;}).join(", ");
+      const prompt=`You are an elite ${pname} content localizer with deep cultural expertise.
+Your task: Transform content from ${origLangInfo.n} into authentic local content for each target language.
+
+SOURCE CONTENT:
+Title: "${title}"
+${desc?`Description: "${desc.substring(0,500)}"`:""}
+${keywords?`Keywords: "${keywords}"`:""}
+
+TARGET LANGUAGES: ${targetLangs}
+
+LOCALIZATION PRINCIPLES:
+1. TITLE: Think like a native ${pname} creator. What title would make locals CLICK? Max 100 chars. Preserve brand names.
+2. DESCRIPTION: Convey the SAME emotional journey and purpose. Translate MEANING not words. Natural flowing prose.
+3. KEYWORDS: What do people in that country actually search? Use their language. 8-10 terms.
+4. TAGS: ${pname==="YouTube"?"5 discoverable YouTube tags in target language":pname==="TikTok"?"4 viral hashtags":"8 Instagram hashtags"}
+
+QUALITY STANDARD:
+- A native speaker must think "a local wrote this"
+- Preserve the channel warmth and personality
+- Never use awkward or unnatural phrasing
+- Cultural adaptation beats literal translation
+
+Return ONLY this JSON, nothing else:
+{${vc.map(c=>`"${c}":{"title":"","desc":"","keywords":"","tags":[]}`).join(",")}}`;
       try{
         const r=await fetch("/api/claude",{
-          method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:2000,messages:[{role:"user",content:prompt}]})
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:4000,messages:[{role:"user",content:prompt}]})
         });
         const data=await r.json();
         let raw=(data.content||[]).map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
-        const res=JSON.parse(raw);
+        let res={};
+        try{res=JSON.parse(raw);}catch(e){console.warn("JSON parse fail:",raw.substring(0,100));}
         vc.forEach(c=>{
-          if(res[c]&&AR[c]){
-            // ★ 생성 후 100자 초과시 즉시 절단
-            let ct=res[c].title||AR[c].gTitle;
-            if(ct.length>100)ct=ct.substring(0,97)+"...";
-            let ca=res[c].title_alt||"";
-            if(ca.length>100)ca=ca.substring(0,97)+"...";
-            AR[c].cTitle=ct;AR[c].cAlt=ca;
-            AR[c].keywords=res[c].keywords||"";AR[c].tags=res[c].tags||[];
+          const lang=LANGS.find(x=>x.c===c)||{c,n:c,f:"🏳️"};
+          if(res[c]){
+            let t=res[c].title||title;
+            if(t.length>100)t=t.substring(0,97)+"...";
+            AR[c]={lang,gTitle:t,gDesc:res[c].desc||desc,cTitle:t,cAlt:"",keywords:res[c].keywords||keywords||"",tags:res[c].tags||[]};
+          }else{
+            AR[c]={lang,gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:keywords||"",tags:[]};
           }
           cd.count++;
-          document.getElementById("progress-bar").style.width=(50+Math.round(cd.count/cd.total*50))+"%";
-          document.getElementById("prog-text").textContent=`AI 맥락 최적화 중... ${cd.count}/${cd.total}개국`;
+          document.getElementById("progress-bar").style.width=Math.round(cd.count/cd.total*100)+"%";
         });
-      }catch(e){vc.forEach(c=>{if(AR[c])AR[c].cTitle=AR[c].gTitle;cd.count++;});}
+      }catch(e){
+        vc.forEach(c=>{
+          const lang=LANGS.find(x=>x.c===c)||{c,n:c,f:"🏳️"};
+          AR[c]={lang,gTitle:title,gDesc:desc,cTitle:title,cAlt:"",keywords:keywords||"",tags:[]};
+          cd.count++;
+        });
+      }
     }));
-    // ★ 원본어 키워드: 입력창에서 직접 받아서 설정
-    if(AR[origLang]){
-      const manualKw=document.getElementById("inp-keywords").value.trim();
-      if(manualKw)AR[origLang].keywords=manualKw;
-    }
+
     clearInterval(ti);
     const tt=((Date.now()-st)/1000).toFixed(1);
     document.getElementById("timer").textContent=tt+"초 완료!";
     document.getElementById("progress-bar").style.width="100%";
-    document.getElementById("prog-text").textContent=`${Object.keys(AR).length}개국 완료`;
+    document.getElementById("progress-area").style.display="none";
     document.getElementById("results").style.display="block";
-    document.getElementById("results-title").textContent=`번역 완료 — ${Object.keys(AR).length}개국 / ${tt}초`;
+    document.getElementById("results-title").textContent="번역 결과";
+    const sb2=document.getElementById("status-box");
+    sb2.className="status-box ok";
+    sb2.textContent=`✓ 번역 완료 — 70개국 / ${tt}초`;
+    sb2.style.display="block";
     const grid=document.getElementById("results-grid");
     LANGS.forEach(lang=>{
-      const r=AR[lang.c];if(!r||!r.gTitle)return;
+      const r=AR[lang.c];if(!r||!r.cTitle)return;
       const row=document.createElement("div");row.className="lang-row";
       const id="r_"+lang.c.replace(/[^a-zA-Z0-9]/g,"_");row.id=id;
       const tags=(r.tags||[]).map(t=>`<span class="lang-tag">${t.startsWith("#")?t:"#"+t}</span>`).join("");
       row.innerHTML=`<div class="lang-name"><span class="lang-flag">${lang.f}</span>${lang.n}</div>
         <div class="lang-content">
-          <div class="lang-title">${esc(r.cTitle||r.gTitle)}<span class="ctx-badge">맥락</span><span class="ok-badge" id="ob_${id}">✓ 등록됨</span></div>
-          ${r.cAlt?`<div class="lang-title-alt">↳ ${esc(r.cAlt)}</div>`:""}
+          <div class="lang-title">${esc(r.cTitle)}<span class="ctx-badge">맥락</span><span class="ok-badge" id="ob_${id}">✓ 등록됨</span></div>
           ${r.gDesc?`<div class="lang-desc">${esc(r.gDesc.substring(0,150))}${r.gDesc.length>150?"...":""}</div>`:""}
           ${r.keywords?`<div class="lang-kw">🔑 ${esc(r.keywords)}</div>`:""}
           ${tags?`<div class="lang-tags">${tags}</div>`:""}
@@ -384,20 +392,13 @@ JSON only: {${vc.map(c=>`"${c}":{"title":"","title_alt":"","keywords":"","tags":
         <button class="copy-btn" onclick="copyRow('${id}')">복사</button>`;
       grid.appendChild(row);
     });
-    document.getElementById("status-box").style.display="none";
-    document.getElementById("progress-area").style.display="none";
-    const sb2=document.getElementById("status-box");
-    sb2.className="status-box ok";
-    sb2.textContent=`✓ 번역 완료 — 70개국 / ${tt}초`;
-    sb2.style.display="block";
-    document.getElementById("results-title").textContent=`번역 결과`;
     if(AT){document.getElementById("btn-apply").style.display="flex";}
   }catch(e){
     clearInterval(ti);
     const sb=document.getElementById("status-box");
     sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
-  btn.disabled=false;document.getElementById("btn-lbl").textContent="70개국 동시 번역 실행";
+  btn.disabled=false;document.getElementById("btn-lbl").textContent="70개국 자동 맥락번역 실행";
 }
 
 async function applyYT(){
@@ -501,7 +502,7 @@ async function applyYT(){
     if(!res.ok){
       sb.className="status-box err";
       sb.innerHTML=`❌ STEP1 실패 — snippet 자체 문제<br><small>오류: ${res.err}<br>제목길이: ${Object.entries(loc5).map(([k,v])=>`${k}:${v.title.length}자`).join(", ")}</small>`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
       return;
     }
     log(`✓ STEP1 성공`);
@@ -529,7 +530,7 @@ async function applyYT(){
       document.getElementById("progress-bar").style.width="100%";
       sb.className="status-box ok";
       sb.textContent=`✅ YouTube ${goodCodes.length}개국 제목+설명문 등록 완료!`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
       return;
     }
     log(`✓ STEP2 성공`);
@@ -546,7 +547,7 @@ async function applyYT(){
         +`<small>오류: <b>${res.err}</b><br>`
         +`샘플 설명문(en): "${(locFull["en"]?.description||"").substring(0,80)}"<br>`
         +`샘플 설명문(es): "${(locFull["es"]?.description||"").substring(0,80)}"</small>`;
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
+      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
       return;
     }
 
@@ -566,7 +567,7 @@ async function applyYT(){
   }catch(e){
     sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";
   }
-  btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인";
+  btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
 }
 
 async function tryPut(vid,snippet,localizations,token){
