@@ -571,8 +571,9 @@ async function verifyGet(vid,token){
 
 // ★ FIX: ytDesc 강화 — 빈 문자열도 공백 " " 로 보장, 제어문자 제거
 function sanitizeForYT(s){
-  if(!s||!s.trim())return " ";
-  // 제어문자 제거 (줄바꿈 \n, \r 은 유지)
+  if(!s)return " ";
+  s=String(s);
+  if(!s.trim())return " ";
   return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"").trim()||" ";
 }
 function ytTitle(s){
