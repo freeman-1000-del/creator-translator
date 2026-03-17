@@ -11,13 +11,12 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: req.body.max_tokens || 4000,
+        model: 'gpt-4.1-mini',
+        max_tokens: req.body.max_tokens || 16000,
         messages: req.body.messages
       })
     });
     const data = await response.json();
-    // OpenAI 응답을 Claude 형식으로 변환
     if (data.choices && data.choices[0]) {
       res.status(200).json({
         content: [{ type: 'text', text: data.choices[0].message.content }]
@@ -25,7 +24,4 @@ export default async function handler(req, res) {
     } else {
       res.status(response.status).json(data);
     }
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-}
+  } catch(e)
