@@ -308,8 +308,8 @@ async function startTranslate(nd){
       const vc=codes.filter(c=>c!==origLang);
       if(!vc.length)return;
       const targetLangs=vc.map(c=>{const l=LANGS.find(x=>x.c===c);return `${c}(${l?.n||c})`;}).join(", ");
-      const prompt=`You are an elite ${pname} content localizer with deep cultural expertise.
-Your task: Transform content from ${origLangInfo.n} into authentic local content for each target language.
+      const prompt=`You are a professional ${pname} content translator with deep cultural expertise.
+Your mission: Faithfully convey the ORIGINAL AUTHOR'S INTENT (90%+ accuracy) while making it sound natural in the target language.
 
 SOURCE CONTENT:
 Title: "${title}"
@@ -318,19 +318,21 @@ ${keywords?`Keywords: "${keywords}"`:""}
 
 TARGET LANGUAGES: ${targetLangs}
 
-LOCALIZATION PRINCIPLES:
-1. TITLE: Think like a native ${pname} creator. What title would make locals CLICK? Max 100 chars. Preserve brand names.
-2. DESCRIPTION: Convey the SAME emotional journey and purpose. Translate MEANING not words. Natural flowing prose.
-3. KEYWORDS: What do people in that country actually search? Use their language. 8-10 terms.
-4. TAGS: ${pname==="YouTube"?"5 discoverable YouTube tags in target language":pname==="TikTok"?"4 viral hashtags":"8 Instagram hashtags"}
+TRANSLATION PRINCIPLES:
+1. FAITHFULNESS FIRST: Preserve 90%+ of the original meaning, structure, and emotional tone
+2. NATURAL LANGUAGE: Polish the sentences to sound natural — NOT word-for-word, but NOT creative rewriting
+3. TITLE: Keep the same structure and meaning. MAX 100 chars. Preserve brand names exactly.
+4. DESCRIPTION: Translate with respect for the original author's voice. Same length, same sections, same emotional journey.
+5. KEYWORDS: 8-10 actual local search terms in the target language that match the content theme
+6. TAGS: ${pname==="YouTube"?"5 YouTube SEO tags":pname==="TikTok"?"4 hashtags":"8 hashtags"}
 
-QUALITY STANDARD:
-- A native speaker must think "a local wrote this"
-- Preserve the channel warmth and personality
-- Never use awkward or unnatural phrasing
-- Cultural adaptation beats literal translation
+CRITICAL:
+- DO NOT add, invent, or expand content beyond the original
+- DO NOT remove any part of the original message
+- Treat the original author's words with deep respect
+- The reader should feel the same emotion as the original
 
-Return ONLY this JSON, nothing else:
+Return ONLY valid JSON, no markdown:
 {${vc.map(c=>`"${c}":{"title":"","desc":"","keywords":"","tags":[]}`).join(",")}}`;
       try{
         const r=await fetch("/api/claude",{
@@ -338,7 +340,6 @@ Return ONLY this JSON, nothing else:
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:4000,messages:[{role:"user",content:prompt}]})
         });
-        const data=await r.json();
         if(data.error){
           console.error("Claude API 오류:", data.error);
         }
