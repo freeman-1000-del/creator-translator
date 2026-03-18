@@ -364,7 +364,7 @@ Return ONLY valid JSON, no markdown:
         const r=await fetch("/api/translate",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({max_tokens:16000,messages:[{role:"user",content:prompt}]})
+         body:JSON.stringify({max_tokens:3000,messages:[{role:"user",content:prompt}
         });
         const data=await r.json();
         if(data.error){console.error("Claude API 오류:",data.error);}
