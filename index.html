@@ -330,7 +330,7 @@ async function startTranslate(nd){
     document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
     const cd={count:0,total:LANGS.length};
 
-    const chunkSize=5;
+    const chunkSize=23;
     for(let i=0;i<CB.length;i+=chunkSize){
       const chunk=CB.slice(i,i+chunkSize);
       await Promise.all(chunk.map(async(codes)=>{
