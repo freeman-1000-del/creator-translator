@@ -227,6 +227,18 @@ const YT_CODE_MAP={
   "ne":"ne","sl":"sl","mk":"mk","mt":"mt","be":"be"
 };
 
+// YouTube API가 실제로 지원하는 언어 코드만 허용 (미지원 코드 제거)
+const YT_SAFE=new Set([
+  "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
+  "da","fi","el","cs","sk","hu","ro","bg","hr",
+  "sr","uk","sq","et","lv","lt","ja","zh-Hans","zh-Hant",
+  "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
+  "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
+  "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
+  "mt","be"
+  // 제거됨: "bs","am","yo","ha","zu" — YouTube 미지원
+]);
+
 function doLogout(){
   localStorage.removeItem('ct_token');
   localStorage.removeItem('ct_email');
@@ -318,7 +330,6 @@ async function startTranslate(nd){
     document.getElementById("prog-text").textContent="Claude AI 맥락번역 중...";
     const cd={count:0,total:LANGS.length};
 
-    // 동시 5개씩 처리 (rate limit 방지)
     const chunkSize=5;
     for(let i=0;i<CB.length;i+=chunkSize){
       const chunk=CB.slice(i,i+chunkSize);
@@ -437,15 +448,7 @@ async function applyYT(){
   sb.className="status-box ok";sb.style.display="block";
   const logLines=[];
   function log(msg){logLines.push(msg);console.log(msg);document.getElementById("prog-text").textContent=logLines.slice(-1)[0];}
-  const YT_SAFE=new Set([
-    "ko","en","fr","de","es","it","pt-BR","ru","nl","pl","sv",
-    "bs","da","fi","el","cs","sk","hu","ro","bg","hr",
-    "sr","uk","sq","et","lv","lt","ja","zh-Hans","zh-Hant",
-    "ar","hi","tr","vi","th","id","ms","fil","bn","ur","fa",
-    "iw","ta","te","ml","kn","pa","mn","kk","uz","az","ka","hy",
-    "my","km","si","sw","ca","cy","ga","af","ne","sl","mk",
-    "am","yo","ha","zu","mt","be"
-  ]);
+
   try{
     log("영상 정보 가져오는 중...");
     const getResp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=localizations,snippet&id=${vid}`,{headers:{"Authorization":"Bearer "+AT}});
@@ -464,9 +467,11 @@ async function applyYT(){
     const origKeywords=manualKeywords||origAR?.keywords||AR["en"]?.keywords||Object.values(AR).find(r=>r.keywords)?.keywords||"";
     const origDescWithKw=origKeywords&&korDesc&&!korDesc.includes(origKeywords)?ytDesc(korDesc+"\n\n"+origKeywords):ytDesc(korDesc);
 
-    // ★ FIX: locFull 에 description 포함 (locTitle 별도 불필요 — locFull 로 통일)
+    // locFull: YT_SAFE 필터링된 언어만 포함 (단일 PUT으로 전체 등록)
     const locFull={};
-    locFull[ytOrigLang]={title:ytTitle(korTitle),description:origDescWithKw};
+    if(YT_SAFE.has(ytOrigLang)){
+      locFull[ytOrigLang]={title:ytTitle(korTitle),description:origDescWithKw};
+    }
 
     Object.entries(AR).forEach(([code,r])=>{
       if(code===origLang)return;
@@ -474,7 +479,6 @@ async function applyYT(){
       if(!t)return;
       const yc=YT_CODE_MAP[code];
       if(!yc||!YT_SAFE.has(yc))return;
-      // ★ FIX: description 항상 포함 (빈 경우 공백 " " 로 보장)
       const rawDesc=(r.gDesc||"").trim();
       const descWithKw=r.keywords&&rawDesc
         ?ytDesc(rawDesc+"\n\n"+r.keywords)
@@ -490,70 +494,52 @@ async function applyYT(){
       tags:Array.isArray(sn.tags)?sn.tags:[]
     };
     const totalLangs=Object.keys(locFull).length;
-    // ★ 진단: AR 데이터에 description 있는지 확인
-    const arWithDesc=Object.entries(AR).filter(([k,v])=>v.gDesc&&v.gDesc.trim()).length;
-    const locWithDesc=Object.values(locFull).filter(v=>v.description&&v.description.trim()&&v.description!==" ").length;
-    console.log(`[진단] AR 설명문 있는 언어: ${arWithDesc}개 / locFull 설명문 있는 언어: ${locWithDesc}개`);
-    const sampleLoc=locFull["en"]||locFull["ko"]||Object.values(locFull)[0];
-    console.log("[진단] locFull 샘플:", JSON.stringify(sampleLoc));
+    log(`총 ${totalLangs}개국 YouTube 등록 시작...`);
     document.getElementById("progress-bar").style.width="25%";
 
-    // ★ STEP1: 5개국 제목+설명문 테스트
-    const TEST5=["ko","en","fr","es","ja"];
-    const loc5={};TEST5.forEach(k=>{if(locFull[k])loc5[k]=locFull[k];});
-    log(`STEP1: 5개국 제목+설명문 테스트`);
-    let res=await tryPut(vid,baseSnippet,loc5,AT);
-    if(!res.ok){sb.className="status-box err";sb.innerHTML=`❌ STEP1 실패 — ${res.err}`;btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";return;}
-    log(`✓ STEP1 성공`);
-    document.getElementById("progress-bar").style.width="40%";
+    // ★ 핵심 수정: 단일 PUT으로 전체 등록 (루프 없음)
+    log(`전체 ${totalLangs}개국 제목+설명문 일괄 등록 중...`);
+    const res=await tryPut(vid,baseSnippet,locFull,AT);
+    document.getElementById("progress-bar").style.width="90%";
 
-    // ★ STEP2: 전체 언어 제목+설명문 일괄 등록
-    log(`STEP2: 전체 ${totalLangs}개국 제목+설명문 등록`);
-    res=await tryPut(vid,baseSnippet,locFull,AT);
     if(!res.ok){
-      // ★ FIX: fallback 에서도 locFull(설명문 포함) 사용
-      log(`일부 언어 오류 — 개별 검증 시작`);
-      const goodCodes=["ko","en","fr","es","ja"];
-      const remaining=Object.keys(locFull).filter(k=>!goodCodes.includes(k));
-      for(const code of remaining){
-        const testLoc={};[...goodCodes,code].forEach(k=>{if(locFull[k])testLoc[k]=locFull[k];});
-        const sr=await tryPut(vid,baseSnippet,testLoc,AT);
-        if(sr.ok)goodCodes.push(code);else console.warn("❌ 거부된 언어코드:",code);
-      }
-      const locGood={};
-      // ★ FIX: 최종 등록도 locFull (설명문 포함)
-      goodCodes.forEach(k=>{if(locFull[k])locGood[k]=locFull[k];});
-      await tryPut(vid,baseSnippet,locGood,AT);
-      document.getElementById("progress-bar").style.width="100%";
-      document.getElementById("progress-area").style.display="none";
-      sb.className="status-box ok";sb.textContent=`✅ YouTube ${goodCodes.length}개국 제목+설명문 등록 완료!`;
-      Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
-      btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";return;
+      sb.className="status-box err";
+      sb.innerHTML=`❌ 등록 실패 — ${res.err}<br><small>YouTube Studio에서 수동으로 확인해주세요.</small>`;
+      btn.disabled=false;
+      document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
+      return;
     }
-    log(`✓ STEP2 성공`);
+
+    log(`✓ 등록 완료`);
     document.getElementById("progress-bar").style.width="100%";
     const verify=await verifyGet(vid,AT);
     document.getElementById("progress-area").style.display="none";
-    // ★ 화면에 상세 진단 표시
-    const arDescCount=Object.values(AR).filter(r=>r.gDesc&&r.gDesc.trim()).length;
-    const locDescCount=Object.values(locFull).filter(v=>v.description&&v.description.trim()&&v.description!==" ").length;
-    const sampleEn=locFull["en"]||locFull["ko"]||Object.values(locFull)[0]||{};
-    const sampleDesc=(sampleEn.description||"(없음)").substring(0,60);
+
     sb.className="status-box ok";
-    sb.innerHTML=`✓ ${verify.count}개국 등록 완료<br>
-      <b>번역 설명문 보유:</b> ${arDescCount}개국<br>
-      <b>YouTube 전송 설명문:</b> ${locDescCount}개국<br>
-      <b>API 응답 설명문:</b> ${verify.hasDesc?"있음("+verify.descCount+"개국)":"없음"}<br>
-      <b>영어 샘플:</b> ${sampleDesc}`;
+    sb.innerHTML=`✅ YouTube ${verify.count}개국 제목+설명문 등록 완료!<br>
+      <small>설명문 등록: ${verify.descCount}개국 | 
+      영어 샘플: ${(verify.sampleTitle||"").substring(0,40)}</small>`;
     sb.style.display="block";
-    Object.keys(AR).forEach(c=>{const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));if(o)o.style.display="inline-flex";});
-  }catch(e){sb.className="status-box err";sb.textContent="오류: "+e.message;sb.style.display="block";}
-  btn.disabled=false;document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
+    Object.keys(AR).forEach(c=>{
+      const o=document.getElementById("ob_r_"+c.replace(/[^a-zA-Z0-9]/g,"_"));
+      if(o)o.style.display="inline-flex";
+    });
+  }catch(e){
+    sb.className="status-box err";
+    sb.textContent="오류: "+e.message;
+    sb.style.display="block";
+  }
+  btn.disabled=false;
+  document.getElementById("apply-lbl").textContent="✔ 확인 (YouTube 자막등록)";
 }
 
 async function tryPut(vid,snippet,localizations,token){
   try{
-    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{method:"PUT",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({kind:"youtube#video",id:vid,snippet,localizations})});
+    const resp=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations`,{
+      method:"PUT",
+      headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},
+      body:JSON.stringify({kind:"youtube#video",id:vid,snippet,localizations})
+    });
     const data=await resp.json();
     if(data.error)return{ok:false,err:data.error.errors?.[0]?.reason||data.error.message};
     return{ok:true,savedCount:Object.keys(data.localizations||{}).length,data};
@@ -566,15 +552,13 @@ async function verifyGet(vid,token){
     const data=await resp.json();
     const loc=data.items?.[0]?.localizations||{};
     const count=Object.keys(loc).length;
-    // 실제 저장된 내용 확인
     const sample=loc["en"]||loc["ko"]||Object.values(loc)[0]||{};
     const hasDesc=Object.values(loc).some(v=>v.description&&v.description.trim()&&v.description.trim()!==" ");
     const descCount=Object.values(loc).filter(v=>v.description&&v.description.trim()&&v.description.trim()!==" ").length;
     return{count,hasDesc,descCount,sampleTitle:sample.title||"",sampleDesc:sample.description||""};
-  }catch(e){return{count:0,hasDesc:false,descCount:0};}
+  }catch(e){return{count:0,hasDesc:false,descCount:0,sampleTitle:"",sampleDesc:""};}
 }
 
-// ★ FIX: ytDesc 강화 — 빈 문자열도 공백 " " 로 보장, 제어문자 제거
 function sanitizeForYT(s){
   if(!s)return " ";
   s=String(s);
