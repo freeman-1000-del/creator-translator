@@ -45,4 +45,40 @@ Description: ${description}`;
       try {
         const clean = text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(clean);
-        if (p
+        if (parsed.title && parsed.description) return parsed;
+        return null;
+      } catch(e) {
+        return null;
+      }
+    };
+
+    for (const lang of languages) {
+      // 1차 시도
+      let result = await translateOne(lang);
+
+      // 실패시 1회 재시도
+      if (!result) {
+        result = await translateOne(lang);
+      }
+
+      if (result) {
+        results[lang.code] = result;
+      } else {
+        failed.push({ code: lang.code, name: lang.name });
+      }
+    }
+
+    res.status(200).json({
+      translations: results,
+      failed: failed,
+      summary: {
+        total: languages.length,
+        success: Object.keys(results).length,
+        failed: failed.length
+      }
+    });
+
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+}
