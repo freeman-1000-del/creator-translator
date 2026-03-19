@@ -15,12 +15,11 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 #progress-box{background:white;border:1px solid #ddd;border-radius:4px;padding:15px;margin:12px 0;display:none;}
 #progress-bar-wrap{background:#eee;border-radius:10px;height:20px;margin:8px 0;}
 #progress-bar{background:#4CAF50;height:20px;border-radius:10px;width:0%;transition:width 0.3s;}
-#progress-text{text-align:center;font-size:13px;color:#666;}
+#progress-text{text-align:center;font-size:14px;color:#666;font-weight:bold;}
 #summary{background:#e8f5e9;border:1px solid #4CAF50;border-radius:4px;padding:15px;margin:10px 0;display:none;font-size:14px;}
-.result{background:white;border:1px solid #ddd;border-radius:4px;padding:12px;margin:6px 0;}
+.result{background:white;border:1px solid #ddd;border-radius:4px;padding:12px;margin:6px 0;border-left:4px solid #4CAF50;}
 .result h3{margin:0 0 6px 0;color:#333;font-size:13px;}
 .result p{margin:3px 0;color:#555;font-size:12px;}
-.success{border-left:4px solid #4CAF50;}
 .failed-box{background:#fff3f3;border:1px solid #ffcccc;border-radius:4px;padding:12px;margin:6px 0;font-size:13px;}
 .keywords{color:#1565C0;font-weight:bold;}
 </style>
@@ -81,20 +80,23 @@ async function startTranslate() {
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const keywordsRaw = document.getElementById('keywords').value.trim();
-
   if (!title) { alert('제목을 입력하세요'); return; }
 
-  const keywords = keywordsRaw
-    ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ')
-    : '';
+  const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
 
+  const startTime = Date.now();
   document.getElementById('btn').disabled = true;
   document.getElementById('btn').textContent = '번역 중...';
   document.getElementById('progress-box').style.display = 'block';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-text').textContent = '번역 준비 중...';
   document.getElementById('results').innerHTML = '';
   document.getElementById('summary').style.display = 'none';
 
   try {
+    document.getElementById('progress-text').textContent = '번역 중... 잠시 기다려주세요';
+    document.getElementById('progress-bar').style.width = '50%';
+
     const res = await fetch('/api/translate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -102,38 +104,42 @@ async function startTranslate() {
     });
     const data = await res.json();
 
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     document.getElementById('progress-bar').style.width = '100%';
-    document.getElementById('progress-text').textContent = '번역 완료!';
+    document.getElementById('progress-text').textContent = `✅ 번역 완료! (${elapsed}초)`;
 
     const summary = document.getElementById('summary');
     summary.style.display = 'block';
     summary.innerHTML = `
       ✅ 성공: <strong>${data.summary.success}개</strong> &nbsp;|&nbsp;
       ❌ 실패: <strong>${data.summary.failed}개</strong> &nbsp;|&nbsp;
-      전체: <strong>${data.summary.total}개</strong>
+      전체: <strong>${data.summary.total}개</strong> &nbsp;|&nbsp;
+      ⏱ 소요시간: <strong>${elapsed}초</strong>
     `;
 
     let html = '';
     for (const lang of LANGS) {
       const t = data.translations[lang.code];
       if (t) {
-        html += `<div class="result success">
+        html += `<div class="result">
           <h3>✅ ${lang.name} (${lang.code})</h3>
           <p><strong>제목:</strong> ${t.title}</p>
           <p><strong>설명:</strong> ${t.description}</p>
-          ${keywords ? `<p class="keywords">${keywords}</p>` : ''}
+          ${keywords ? `<p class="keywords">${t.keywords || keywords}</p>` : ''}
         </div>`;
       }
     }
 
     if (data.failed && data.failed.length > 0) {
-      html += `<div class="failed-box"><strong>❌ 번역 실패 언어 (${data.failed.length}개)</strong><br>`;
+      html += `<div class="failed-box"><strong>❌ 번역 실패 (${data.failed.length}개)</strong><br>`;
       data.failed.forEach(f => { html += `• ${f.name} (${f.code})<br>`; });
       html += '</div>';
     }
 
     document.getElementById('results').innerHTML = html;
+
   } catch(e) {
+    document.getElementById('progress-text').textContent = '오류 발생';
     document.getElementById('results').innerHTML = '<p style="color:red">오류: ' + e.message + '</p>';
   }
 
