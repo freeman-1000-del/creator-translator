@@ -37,8 +37,9 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <label>YouTube 제목</label>
 <input type="text" id="title" placeholder="예: 피아노 힐링 음악 1시간">
 
-<label>YouTube 설명 <span style="font-weight:normal;color:#e65100;font-size:12px;">⚠ 설명문이 길수록 번역 시간이 증가합니다. 1,000자 이내 권장.</span></label>
+<label>YouTube 설명</label>
 <textarea id="description" rows="4" placeholder="예: 편안한 피아노 음악으로 하루의 피로를 풀어보세요"></textarea>
+<div style="text-align:right;font-size:12px;color:#888;">글자수: <span id="desc-count">0</span></div>
 
 <label>키워드 (쉼표로 구분)</label>
 <input type="text" id="keywords" placeholder="예: 힐링, 피아노, 음악, 수면, 휴식">
@@ -159,6 +160,9 @@ async function startTranslate() {
   document.getElementById('btn').disabled = false;
   document.getElementById('btn').textContent = '🚀 70개국 번역 시작';
 }
+  javascriptdocument.getElementById('description').addEventListener('input', function() {
+  document.getElementById('desc-count').textContent = this.value.length;
+});
 </script>
 </body>
 </html>
