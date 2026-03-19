@@ -1,1 +1,118 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumaLation 번역 테스트</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#f5f5f5;}
+h1{color:#333;}
+input,textarea{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px;font-size:14px;box-sizing:border-box;}
+button{background:#C9A84C;color:white;padding:12px 30px;border:none;border-radius:4px;font-size:16px;cursor:pointer;width:100%;}
+button:hover{background:#a88a3d;}
+.result{background:white;border:1px solid #ddd;border-radius:4px;padding:15px;margin:8px 0;}
+.result h3{margin:0 0 8px 0;color:#333;font-size:14px;}
+.result p{margin:4px 0;color:#555;font-size:13px;}
+.success{border-left:4px solid #4CAF50;}
+.failed-box{background:#fff3f3;border:1px solid #ffcccc;border-radius:4px;padding:15px;margin:8px 0;}
+#summary{background:#e8f5e9;border:1px solid #4CAF50;border-radius:4px;padding:15px;margin:10px 0;display:none;}
+#loading{display:none;text-align:center;padding:20px;font-size:16px;color:#666;}
+</style>
+</head>
+<body>
+<h1>🌍 HumaLation 번역 테스트</h1>
+<label>YouTube 제목</label>
+<input type="text" id="title" placeholder="예: 피아노 힐링 음악 1시간" value="피아노 힐링 음악 1시간">
+<label>YouTube 설명</label>
+<textarea id="description" rows="4" placeholder="예: 편안한 피아노 음악으로 하루의 피로를 풀어보세요">편안한 피아노 음악으로 하루의 피로를 풀어보세요. 공부, 수면, 휴식에 좋습니다.</textarea>
+<button onclick="translate()">🚀 70개국 번역 시작</button>
+<div id="loading">⏳ 번역 중... 잠시 기다려주세요</div>
+<div id="summary"></div>
+<div id="results"></div>
+
+<script>
+const LANGS = [
+  {code:'af',name:'Afrikaans'},{code:'sq',name:'Albanian'},{code:'ar',name:'Arabic'},
+  {code:'hy',name:'Armenian'},{code:'az',name:'Azerbaijani'},{code:'bn',name:'Bengali'},
+  {code:'bs',name:'Bosnian'},{code:'bg',name:'Bulgarian'},{code:'ca',name:'Catalan'},
+  {code:'zh-Hans',name:'Chinese Simplified'},{code:'zh-Hant',name:'Chinese Traditional'},
+  {code:'hr',name:'Croatian'},{code:'cs',name:'Czech'},{code:'da',name:'Danish'},
+  {code:'nl',name:'Dutch'},{code:'en',name:'English'},{code:'et',name:'Estonian'},
+  {code:'fi',name:'Finnish'},{code:'fr',name:'French'},{code:'ka',name:'Georgian'},
+  {code:'de',name:'German'},{code:'el',name:'Greek'},{code:'gu',name:'Gujarati'},
+  {code:'he',name:'Hebrew'},{code:'hi',name:'Hindi'},{code:'hu',name:'Hungarian'},
+  {code:'is',name:'Icelandic'},{code:'id',name:'Indonesian'},{code:'it',name:'Italian'},
+  {code:'ja',name:'Japanese'},{code:'kn',name:'Kannada'},{code:'kk',name:'Kazakh'},
+  {code:'km',name:'Khmer'},{code:'ko',name:'Korean'},{code:'lo',name:'Lao'},
+  {code:'lv',name:'Latvian'},{code:'lt',name:'Lithuanian'},{code:'mk',name:'Macedonian'},
+  {code:'ms',name:'Malay'},{code:'ml',name:'Malayalam'},{code:'mt',name:'Maltese'},
+  {code:'mn',name:'Mongolian'},{code:'ne',name:'Nepali'},{code:'nb',name:'Norwegian'},
+  {code:'ps',name:'Pashto'},{code:'fa',name:'Persian'},{code:'pl',name:'Polish'},
+  {code:'pt',name:'Portuguese'},{code:'pa',name:'Punjabi'},{code:'ro',name:'Romanian'},
+  {code:'ru',name:'Russian'},{code:'sr',name:'Serbian'},{code:'si',name:'Sinhala'},
+  {code:'sk',name:'Slovak'},{code:'sl',name:'Slovenian'},{code:'so',name:'Somali'},
+  {code:'es',name:'Spanish'},{code:'sw',name:'Swahili'},{code:'sv',name:'Swedish'},
+  {code:'tl',name:'Filipino'},{code:'ta',name:'Tamil'},{code:'te',name:'Telugu'},
+  {code:'th',name:'Thai'},{code:'tr',name:'Turkish'},{code:'uk',name:'Ukrainian'},
+  {code:'ur',name:'Urdu'},{code:'uz',name:'Uzbek'},{code:'vi',name:'Vietnamese'},
+  {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
+];
+
+async function translate() {
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  if (!title) { alert('제목을 입력하세요'); return; }
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('summary').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title, description, languages: LANGS})
+    });
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+
+    const summary = document.getElementById('summary');
+    summary.style.display = 'block';
+    summary.innerHTML = `
+      <strong>번역 결과 요약</strong><br>
+      ✅ 성공: ${data.summary.success}개 / 
+      ❌ 실패: ${data.summary.failed}개 / 
+      전체: ${data.summary.total}개
+    `;
+
+    let html = '';
+    for (const lang of LANGS) {
+      const t = data.translations[lang.code];
+      if (t) {
+        html += `<div class="result success">
+          <h3>✅ ${lang.name} (${lang.code})</h3>
+          <p><strong>제목:</strong> ${t.title}</p>
+          <p><strong>설명:</strong> ${t.description}</p>
+        </div>`;
+      }
+    }
+
+    if (data.failed && data.failed.length > 0) {
+      html += `<div class="failed-box">
+        <h3>❌ 번역 실패 언어 (${data.failed.length}개)</h3>`;
+      data.failed.forEach(f => {
+        html += `<p>• ${f.name} (${f.code})</p>`;
+      });
+      html += '</div>';
+    }
+
+    document.getElementById('results').innerHTML = html;
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').innerHTML = '<p style="color:red">오류 발생: ' + e.message + '</p>';
+  }
+}
+</script>
+</body>
+</html>
