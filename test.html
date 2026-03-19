@@ -110,7 +110,30 @@ if (!title) { alert('제목을 입력하세요'); return; }
   document.getElementById('results').innerHTML = '';
   document.getElementById('summary').style.display = 'none';
 
-  if (timerInterval) clearInterval(timerInterval);
+  if (timerInterval) // 실패 언어 자동 재시도
+  if (allFailed.length > 0) {
+    document.getElementById('progress-text').textContent = '실패 ' + allFailed.length + '개 재시도 중...';
+    const retryFailed = [];
+    for (const lang of allFailed) {
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({title, description, keywords, languages: [lang], openai_key})
+        });
+        const data = await res.json();
+        if (data.translations && data.translations[lang.code]) {
+          allResults[lang.code] = data.translations[lang.code];
+        } else {
+          retryFailed.push(lang);
+        }
+      } catch(e) { retryFailed.push(lang); }
+    }
+    allFailed.length = 0;
+    allFailed.push(...retryFailed);
+  }
+
+  clearInterval(timerInterval);
   timerInterval = setInterval(function() {
     document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(1) + '초 경과';
   }, 100);
