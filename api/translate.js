@@ -49,19 +49,19 @@ Keywords: ${keywords || ''}`;
       }
     };
 
-    // 병렬 처리
-    const responses = await Promise.all(languages.map(lang => translateOne(lang)));
-
+    // 10개씩 배치 병렬 처리
     const results = {};
     const failed = [];
+    const BATCH = 10;
 
-    responses.forEach(({ lang, result }) => {
-      if (result) {
-        results[lang.code] = result;
-      } else {
-        failed.push({ code: lang.code, name: lang.name });
-      }
-    });
+    for (let i = 0; i < languages.length; i += BATCH) {
+      const batch = languages.slice(i, i + BATCH);
+      const responses = await Promise.all(batch.map(lang => translateOne(lang)));
+      responses.forEach(({ lang, result }) => {
+        if (result) results[lang.code] = result;
+        else failed.push({ code: lang.code, name: lang.name });
+      });
+    }
 
     res.status(200).json({
       translations: results,
