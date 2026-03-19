@@ -23,10 +23,16 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 .result p{margin:3px 0;color:#555;font-size:12px;}
 .failed-box{background:#fff3f3;border:1px solid #ffcccc;border-radius:4px;padding:12px;margin:6px 0;font-size:13px;}
 .keywords{color:#1565C0;font-weight:bold;}
+.key-box{background:#fffde7;border:1px solid #ffe082;border-radius:4px;padding:12px;margin-bottom:8px;}
 </style>
 </head>
 <body>
 <h1>🌍 HumaLation 번역 테스트</h1>
+
+<div class="key-box">
+<label>🔑 OpenAI API Key</label>
+<input type="password" id="openai-key" placeholder="sk-...">
+</div>
 
 <label>YouTube 제목</label>
 <input type="text" id="title" placeholder="예: 피아노 힐링 음악 1시간">
@@ -78,18 +84,21 @@ const LANGS = [
   {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
 ];
 
-const BATCH_SIZE = 70;
+const BATCH_SIZE = 15;
 let timerInterval = null;
 
 async function startTranslate() {
+  const openai_key = document.getElementById('openai-key').value.trim();
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const keywordsRaw = document.getElementById('keywords').value.trim();
+
+  if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요 (sk-로 시작)'); return; }
   if (!title) { alert('제목을 입력하세요'); return; }
 
   const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
-
   const startTime = Date.now();
+
   document.getElementById('btn').disabled = true;
   document.getElementById('btn').textContent = '번역 중...';
   document.getElementById('progress-box').style.display = 'block';
@@ -99,40 +108,29 @@ async function startTranslate() {
   document.getElementById('results').innerHTML = '';
   document.getElementById('summary').style.display = 'none';
 
-  // 실시간 타이머
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(function() {
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    document.getElementById('timer').textContent = elapsed + '초 경과';
+    document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(1) + '초 경과';
   }, 100);
 
   const allResults = {};
   const allFailed = [];
   const batches = [];
-
-  for (let i = 0; i < LANGS.length; i += BATCH_SIZE) {
-    batches.push(LANGS.slice(i, i + BATCH_SIZE));
-  }
+  for (let i = 0; i < LANGS.length; i += BATCH_SIZE) batches.push(LANGS.slice(i, i + BATCH_SIZE));
 
   for (let i = 0; i < batches.length; i++) {
-    const pct = Math.round((i / batches.length) * 100);
-    document.getElementById('progress-bar').style.width = pct + '%';
-    const done = i * BATCH_SIZE;
-    document.getElementById('progress-text').textContent =
-      '번역 중... ' + done + ' / ' + LANGS.length + '개 완료';
-
+    document.getElementById('progress-bar').style.width = Math.round((i / batches.length) * 100) + '%';
+    document.getElementById('progress-text').textContent = '번역 중... ' + (i * BATCH_SIZE) + ' / ' + LANGS.length + '개 완료';
     try {
       const res = await fetch('/api/translate', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({title, description, keywords, languages: batches[i]})
+        body: JSON.stringify({title, description, keywords, languages: batches[i], openai_key})
       });
       const data = await res.json();
       if (data.translations) Object.assign(allResults, data.translations);
       if (data.failed) allFailed.push(...data.failed);
-    } catch(e) {
-      console.error('배치 오류:', e);
-    }
+    } catch(e) { console.error('배치 오류:', e); }
   }
 
   clearInterval(timerInterval);
@@ -143,31 +141,20 @@ async function startTranslate() {
 
   const summary = document.getElementById('summary');
   summary.style.display = 'block';
-  summary.innerHTML =
-    '✅ 성공: <strong>' + Object.keys(allResults).length + '개</strong> &nbsp;|&nbsp; ' +
-    '❌ 실패: <strong>' + allFailed.length + '개</strong> &nbsp;|&nbsp; ' +
-    '전체: <strong>' + LANGS.length + '개</strong> &nbsp;|&nbsp; ' +
-    '⏱ 소요시간: <strong>' + elapsed + '초</strong>';
+  summary.innerHTML = '✅ 성공: <strong>' + Object.keys(allResults).length + '개</strong> &nbsp;|&nbsp; ❌ 실패: <strong>' + allFailed.length + '개</strong> &nbsp;|&nbsp; 전체: <strong>' + LANGS.length + '개</strong> &nbsp;|&nbsp; ⏱ 소요시간: <strong>' + elapsed + '초</strong>';
 
   let html = '';
   for (const lang of LANGS) {
     const t = allResults[lang.code];
     if (t) {
-      html += '<div class="result">' +
-        '<h3>✅ ' + lang.name + ' (' + lang.code + ')</h3>' +
-        '<p><strong>제목:</strong> ' + t.title + '</p>' +
-        '<p><strong>설명:</strong> ' + t.description + '</p>' +
-        (keywords ? '<p class="keywords">' + (t.keywords || keywords) + '</p>' : '') +
-        '</div>';
+      html += '<div class="result"><h3>✅ ' + lang.name + ' (' + lang.code + ')</h3><p><strong>제목:</strong> ' + t.title + '</p><p><strong>설명:</strong> ' + t.description + '</p>' + (keywords ? '<p class="keywords">' + (t.keywords || keywords) + '</p>' : '') + '</div>';
     }
   }
-
   if (allFailed.length > 0) {
     html += '<div class="failed-box"><strong>❌ 번역 실패 (' + allFailed.length + '개)</strong><br>';
     allFailed.forEach(function(f) { html += '• ' + f.name + ' (' + f.code + ')<br>'; });
     html += '</div>';
   }
-
   document.getElementById('results').innerHTML = html;
   document.getElementById('btn').disabled = false;
   document.getElementById('btn').textContent = '🚀 70개국 번역 시작';
