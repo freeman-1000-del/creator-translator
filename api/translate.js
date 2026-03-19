@@ -20,7 +20,7 @@ Title: ${title}
 Description: ${description}
 Keywords: ${keywords || ''}`;
 
-      for (let attempt = 0; attempt < 2; attempt++) {
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
