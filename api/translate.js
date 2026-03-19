@@ -8,8 +8,9 @@ export default async function handler(req, res) {
     const { title, description, languages } = req.body;
 
     const results = {};
+    const failed = [];
 
-    for (const lang of languages) {
+    const translateOne = async (lang) => {
       const prompt = `Translate the following YouTube video title and description into ${lang.name} (language code: ${lang.code}).
 
 CRITICAL RULES:
@@ -39,22 +40,9 @@ Description: ${description}`;
 
       // 한글 잔존 검증
       const hasKorean = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/.test(text);
-      if (hasKorean) continue; // 한글 있으면 해당 언어 건너뜀
+      if (hasKorean) return null;
 
       try {
         const clean = text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(clean);
-        if (parsed.title && parsed.description) {
-          results[lang.code] = parsed;
-        }
-      } catch(e) {
-        continue; // JSON 파싱 실패시 건너뜀
-      }
-    }
-
-    res.status(200).json({ translations: results });
-
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-}
+        if (p
