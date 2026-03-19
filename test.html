@@ -53,4 +53,125 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <script>
 const LANGS = [
   {code:'af',name:'Afrikaans'},{code:'sq',name:'Albanian'},{code:'ar',name:'Arabic'},
-  {code:'hy',name:'Armenian'},{code:'az',name:'Azerbaijani'},{code:'bn',name:
+  {code:'hy',name:'Armenian'},{code:'az',name:'Azerbaijani'},{code:'bn',name:'Bengali'},
+  {code:'bs',name:'Bosnian'},{code:'bg',name:'Bulgarian'},{code:'ca',name:'Catalan'},
+  {code:'zh-Hans',name:'Chinese Simplified'},{code:'zh-Hant',name:'Chinese Traditional'},
+  {code:'hr',name:'Croatian'},{code:'cs',name:'Czech'},{code:'da',name:'Danish'},
+  {code:'nl',name:'Dutch'},{code:'en',name:'English'},{code:'et',name:'Estonian'},
+  {code:'fi',name:'Finnish'},{code:'fr',name:'French'},{code:'ka',name:'Georgian'},
+  {code:'de',name:'German'},{code:'el',name:'Greek'},{code:'gu',name:'Gujarati'},
+  {code:'he',name:'Hebrew'},{code:'hi',name:'Hindi'},{code:'hu',name:'Hungarian'},
+  {code:'is',name:'Icelandic'},{code:'id',name:'Indonesian'},{code:'it',name:'Italian'},
+  {code:'ja',name:'Japanese'},{code:'kn',name:'Kannada'},{code:'kk',name:'Kazakh'},
+  {code:'km',name:'Khmer'},{code:'ko',name:'Korean'},{code:'lo',name:'Lao'},
+  {code:'lv',name:'Latvian'},{code:'lt',name:'Lithuanian'},{code:'mk',name:'Macedonian'},
+  {code:'ms',name:'Malay'},{code:'ml',name:'Malayalam'},{code:'mt',name:'Maltese'},
+  {code:'mn',name:'Mongolian'},{code:'ne',name:'Nepali'},{code:'nb',name:'Norwegian'},
+  {code:'ps',name:'Pashto'},{code:'fa',name:'Persian'},{code:'pl',name:'Polish'},
+  {code:'pt',name:'Portuguese'},{code:'pa',name:'Punjabi'},{code:'ro',name:'Romanian'},
+  {code:'ru',name:'Russian'},{code:'sr',name:'Serbian'},{code:'si',name:'Sinhala'},
+  {code:'sk',name:'Slovak'},{code:'sl',name:'Slovenian'},{code:'so',name:'Somali'},
+  {code:'es',name:'Spanish'},{code:'sw',name:'Swahili'},{code:'sv',name:'Swedish'},
+  {code:'tl',name:'Filipino'},{code:'ta',name:'Tamil'},{code:'te',name:'Telugu'},
+  {code:'th',name:'Thai'},{code:'tr',name:'Turkish'},{code:'uk',name:'Ukrainian'},
+  {code:'ur',name:'Urdu'},{code:'uz',name:'Uzbek'},{code:'vi',name:'Vietnamese'},
+  {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
+];
+
+const BATCH_SIZE = 7;
+let timerInterval = null;
+
+async function startTranslate() {
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const keywordsRaw = document.getElementById('keywords').value.trim();
+  if (!title) { alert('제목을 입력하세요'); return; }
+
+  const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
+
+  const startTime = Date.now();
+  document.getElementById('btn').disabled = true;
+  document.getElementById('btn').textContent = '번역 중...';
+  document.getElementById('progress-box').style.display = 'block';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-text').textContent = '번역 준비 중...';
+  document.getElementById('timer').textContent = '0초 경과';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('summary').style.display = 'none';
+
+  // 실시간 타이머
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    document.getElementById('timer').textContent = elapsed + '초 경과';
+  }, 100);
+
+  const allResults = {};
+  const allFailed = [];
+  const batches = [];
+
+  for (let i = 0; i < LANGS.length; i += BATCH_SIZE) {
+    batches.push(LANGS.slice(i, i + BATCH_SIZE));
+  }
+
+  for (let i = 0; i < batches.length; i++) {
+    const pct = Math.round((i / batches.length) * 100);
+    document.getElementById('progress-bar').style.width = pct + '%';
+    const done = i * BATCH_SIZE;
+    document.getElementById('progress-text').textContent =
+      '번역 중... ' + done + ' / ' + LANGS.length + '개 완료';
+
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title, description, keywords, languages: batches[i]})
+      });
+      const data = await res.json();
+      if (data.translations) Object.assign(allResults, data.translations);
+      if (data.failed) allFailed.push(...data.failed);
+    } catch(e) {
+      console.error('배치 오류:', e);
+    }
+  }
+
+  clearInterval(timerInterval);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('progress-text').textContent = '✅ 번역 완료!';
+  document.getElementById('timer').textContent = '총 소요시간: ' + elapsed + '초';
+
+  const summary = document.getElementById('summary');
+  summary.style.display = 'block';
+  summary.innerHTML =
+    '✅ 성공: <strong>' + Object.keys(allResults).length + '개</strong> &nbsp;|&nbsp; ' +
+    '❌ 실패: <strong>' + allFailed.length + '개</strong> &nbsp;|&nbsp; ' +
+    '전체: <strong>' + LANGS.length + '개</strong> &nbsp;|&nbsp; ' +
+    '⏱ 소요시간: <strong>' + elapsed + '초</strong>';
+
+  let html = '';
+  for (const lang of LANGS) {
+    const t = allResults[lang.code];
+    if (t) {
+      html += '<div class="result">' +
+        '<h3>✅ ' + lang.name + ' (' + lang.code + ')</h3>' +
+        '<p><strong>제목:</strong> ' + t.title + '</p>' +
+        '<p><strong>설명:</strong> ' + t.description + '</p>' +
+        (keywords ? '<p class="keywords">' + (t.keywords || keywords) + '</p>' : '') +
+        '</div>';
+    }
+  }
+
+  if (allFailed.length > 0) {
+    html += '<div class="failed-box"><strong>❌ 번역 실패 (' + allFailed.length + '개)</strong><br>';
+    allFailed.forEach(function(f) { html += '• ' + f.name + ' (' + f.code + ')<br>'; });
+    html += '</div>';
+  }
+
+  document.getElementById('results').innerHTML = html;
+  document.getElementById('btn').disabled = false;
+  document.getElementById('btn').textContent = '🚀 70개국 번역 시작';
+}
+</script>
+</body>
+</html>
