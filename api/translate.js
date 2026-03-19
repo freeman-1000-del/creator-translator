@@ -52,7 +52,7 @@ Keywords: ${keywords || ''}`;
     // 10개씩 배치 병렬 처리
     const results = {};
     const failed = [];
-    const BATCH = 10;
+    const BATCH = 7;
 
     for (let i = 0; i < languages.length; i += BATCH) {
       const batch = languages.slice(i, i + BATCH);
