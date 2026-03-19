@@ -34,11 +34,6 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <body>
 <h1>🌍 HumaLation 번역 테스트</h1>
 
-<div class="key-box">
-<label>🔑 OpenAI API Key</label>
-<input type="password" id="openai-key" placeholder="sk-...">
-</div>
-
 <label>YouTube 제목</label>
 <input type="text" id="title" placeholder="예: 피아노 힐링 음악 1시간">
 
@@ -49,6 +44,11 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <label>키워드 (쉼표로 구분)</label>
 <input type="text" id="keywords" placeholder="예: 힐링, 피아노, 음악, 수면, 휴식">
 
+<div class="key-box">
+<label>🔑 OpenAI API Key</label>
+<input type="password" id="openai-key" placeholder="sk-...">
+</div>
+<button id="btn1" onclick="translate1()">🚀 70개국 번역 시작</button>  
 <button id="btn1" onclick="translate1()">🚀 70개국 맥락번역 시작</button>
 <button id="btn2" class="btn2" onclick="translate2()" style="display:none;">📝 2회 번역 — 설명문 (100자 초과)</button>
 
