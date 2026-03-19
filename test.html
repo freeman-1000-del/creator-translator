@@ -120,41 +120,19 @@ if (!title) { alert('제목을 입력하세요'); return; }
   const batches = [];
   for (let i = 0; i < LANGS.length; i += BATCH_SIZE) batches.push(LANGS.slice(i, i + BATCH_SIZE));
 
-  // 1회: 제목+키워드 번역
-  for (let i = 0; i < batches.length; i++) {
-    document.getElementById('progress-bar').style.width = Math.round((i / batches.length) * 50) + '%';
-    document.getElementById('progress-text').textContent = '[1단계] 제목+키워드 번역 중... ' + (i * BATCH_SIZE) + ' / ' + LANGS.length + '개';
+ for (let i = 0; i < batches.length; i++) {
+    document.getElementById('progress-bar').style.width = Math.round((i / batches.length) * 100) + '%';
+    document.getElementById('progress-text').textContent = '번역 중... ' + (i * BATCH_SIZE) + ' / ' + LANGS.length + '개 완료';
     try {
       const res = await fetch('/api/translate', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({title, description: '', keywords, languages: batches[i], openai_key})
+        body: JSON.stringify({title, description, keywords, languages: batches[i], openai_key})
       });
       const data = await res.json();
       if (data.translations) Object.assign(allResults, data.translations);
       if (data.failed) allFailed.push(...data.failed);
     } catch(e) { console.error('배치 오류:', e); }
-  }
-
-  // 2회: 설명문이 100자 초과일 때만
-  if (description.length > 100) {
-    document.getElementById('progress-text').textContent = '[2단계] 설명문 번역 중...';
-    for (let i = 0; i < batches.length; i++) {
-      document.getElementById('progress-bar').style.width = (50 + Math.round((i / batches.length) * 50)) + '%';
-      try {
-        const res = await fetch('/api/translate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({title, description, keywords: '', languages: batches[i], openai_key})
-        });
-        const data = await res.json();
-        if (data.translations) {
-          Object.entries(data.translations).forEach(([code, t]) => {
-            if (allResults[code]) allResults[code].description = t.description;
-          });
-        }
-      } catch(e) { console.error('설명문 배치 오류:', e); }
-    }
   }
 
   clearInterval(timerInterval);
