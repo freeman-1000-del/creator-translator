@@ -20,39 +20,40 @@ Title: ${title}
 Description: ${description}
 Keywords: ${keywords || ''}`;
 
-      try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 500,
-            messages: [{ role: 'user', content: prompt }]
-          })
-        });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': process.env.ANTHROPIC_API_KEY,
+              'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 500,
+              messages: [{ role: 'user', content: prompt }]
+            })
+          });
 
-        const data = await response.json();
-        const text = data.content?.[0]?.text || '';
-        const hasKorean = /[\uAC00-\uD7AF]/.test(text);
-        if (hasKorean) return { lang, result: null };
+          const data = await response.json();
+          const text = data.content?.[0]?.text || '';
+          const hasKorean = /[\uAC00-\uD7AF]/.test(text);
+          if (hasKorean) continue;
 
-        const clean = text.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(clean);
-        if (parsed.title && parsed.description) return { lang, result: parsed };
-        return { lang, result: null };
-      } catch(e) {
-        return { lang, result: null };
+          const clean = text.replace(/```json|```/g, '').trim();
+          const parsed = JSON.parse(clean);
+          if (parsed.title && parsed.description) return { lang, result: parsed };
+        } catch(e) {
+          if (attempt === 0) await new Promise(r => setTimeout(r, 500));
+        }
       }
+      return { lang, result: null };
     };
 
-    // 10개씩 배치 병렬 처리
     const results = {};
     const failed = [];
-    const BATCH = 7;
+    const BATCH = 10;
 
     for (let i = 0; i < languages.length; i += BATCH) {
       const batch = languages.slice(i, i + BATCH);
