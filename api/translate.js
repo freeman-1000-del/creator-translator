@@ -53,7 +53,7 @@ Keywords: ${keywords || ''}`;
 
     const results = {};
     const failed = [];
-    const BATCH = 15;
+    const BATCH = 10;
 
     for (let i = 0; i < languages.length; i += BATCH) {
       const batch = languages.slice(i, i + BATCH);
