@@ -8,8 +8,8 @@
 body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#f5f5f5;}
 h1{color:#333;text-align:center;}
 label{font-weight:bold;color:#444;display:block;margin-top:12px;}
-input,textarea{width:100%;padding:10px;margin:4px 0;border:1px solid #ddd;border-radius:4px;font-size:14px;box-sizing:border-box;}
-button{background:#C9A84C;color:white;padding:14px;border:none;border-radius:4px;font-size:16px;cursor:pointer;width:100%;margin-top:16px;}
+input,textarea{width:100%;padding:10px;margin:4px 0;border:1px solid #ddd;border-radius:4px;font-siz14px;box-sizing:border-box;}
+button{background:#C9A84C;color:white;padding:14px;border:none;border-radius:4px;font-size:16px;cursor:e:pointer;width:100%;margin-top:16px;}
 button:hover{background:#a88a3d;}
 button:disabled{background:#ccc;cursor:not-allowed;}
 #progress-box{background:white;border:1px solid #ddd;border-radius:4px;padding:15px;margin:12px 0;display:none;}
@@ -89,6 +89,7 @@ async function startTranslate() {
   document.getElementById('btn').textContent = '번역 중...';
   document.getElementById('progress-box').style.display = 'block';
   document.getElementById('progress-bar').style.width = '0%';
+  
   document.getElementById('progress-text').textContent = '번역 준비 중...';
   document.getElementById('results').innerHTML = '';
   document.getElementById('summary').style.display = 'none';
@@ -100,7 +101,8 @@ async function startTranslate() {
     const res = await fetch('/api/translate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({title, description, keywords, languages: LANGS})
+     body: JSON.stringify({title, description, keywords, languages: LANGS}),
+      signal: AbortSignal.timeout(120000),
     });
     const data = await res.json();
 
