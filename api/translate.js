@@ -48,7 +48,7 @@ Keywords: ${keywords || ''}`;
           if (/[\uAC00-\uD7AF]/.test(text)) continue;
           const clean = text.replace(/```json|```/g, '').trim();
           const parsed = JSON.parse(clean);
-          if (parsed.title && parsed.description) return { lang, result: parsed };
+          if (parsed.title) return { lang, result: parsed };
         } catch(e) {
           if (attempt === 0) await new Promise(r => setTimeout(r, 500));
         }
