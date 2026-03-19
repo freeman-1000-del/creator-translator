@@ -1,3 +1,5 @@
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -5,19 +7,29 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
   try {
-    const { title, description, keywords, languages } = req.body;
+    const { title, description, keywords, languages, openai_key } = req.body;
+    const isLongDesc = description && description.length > 100;
+
+    if (!openai_key || !openai_key.startsWith('sk-')) {
+      return res.status(401).json({ error: 'OpenAI API Key가 필요합니다.' });
+    }
+    if (!title || !languages || !languages.length) {
+      return res.status(400).json({ error: 'title과 languages는 필수입니다.' });
+    }
 
     const translateOne = async (lang) => {
-      const prompt = `Translate the following YouTube video title, description, and keywords into ${lang.name} (language code: ${lang.code}).
+      const prompt = `Translate the following YouTube content into ${lang.name} (${lang.code}).
 
-CRITICAL RULES:
-1. Output MUST be entirely in ${lang.name}. Do NOT include any Korean characters whatsoever.
-2. Return ONLY valid JSON: {"title": "...", "description": "...", "keywords": "..."}
-3. Keep # symbol before each keyword.
-4. No markdown, no code blocks, no explanation.
+RULES:
+1. Output MUST be entirely in ${lang.name}. No Korean characters.
+2. Return ONLY valid JSON: {"title":"...","description":"...","keywords":"..."}
+3. Keep # before keywords.
+4. No markdown, no code blocks.
 
 Title: ${title}
-Description: ${description}
+${isLongDesc
+  ? `Description (translate faithfully, preserve full meaning, natural expression in ${lang.name}): ${description}`
+  : `Description: ${description || ''}`}
 Keywords: ${keywords || ''}`;
 
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -35,12 +47,9 @@ Keywords: ${keywords || ''}`;
               messages: [{ role: 'user', content: prompt }]
             })
           });
-
           const data = await response.json();
           const text = data.content?.[0]?.text || '';
-          const hasKorean = /[\uAC00-\uD7AF]/.test(text);
-          if (hasKorean) continue;
-
+          if (/[\uAC00-\uD7AF]/.test(text)) continue;
           const clean = text.replace(/```json|```/g, '').trim();
           const parsed = JSON.parse(clean);
           if (parsed.title && parsed.description) return { lang, result: parsed };
@@ -53,7 +62,7 @@ Keywords: ${keywords || ''}`;
 
     const results = {};
     const failed = [];
-    const BATCH = 5;
+    const BATCH = 15;
 
     for (let i = 0; i < languages.length; i += BATCH) {
       const batch = languages.slice(i, i + BATCH);
@@ -67,11 +76,7 @@ Keywords: ${keywords || ''}`;
     res.status(200).json({
       translations: results,
       failed,
-      summary: {
-        total: languages.length,
-        success: Object.keys(results).length,
-        failed: failed.length
-      }
+      summary: { total: languages.length, success: Object.keys(results).length, failed: failed.length }
     });
 
   } catch(e) {
