@@ -46,4 +46,192 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <label>키워드 (쉼표로 구분)</label>
 <input type="text" id="keywords" placeholder="예: 힐링, 피아노, 음악, 수면, 휴식">
 
-<button id="btn1" onclick="translate1()">🚀 1회 번역 — 제목+키워드
+<button id="btn1" onclick="translate1()">🚀 1회 번역 — 제목+키워드</button>
+<div id="summary"></div>
+
+<div style="margin-top:20px;">
+<label>YouTube 설명문 <span style="font-weight:normal;color:#e65100;font-size:12px;">⚠ 별도 번역 — 버튼을 눌러 실행하세요</span></label>
+<textarea id="description" rows="4" placeholder="예: 편안한 피아노 음악으로 하루의 피로를 풀어보세요"></textarea>
+<div style="text-align:right;font-size:12px;color:#888;">글자수: <span id="desc-count">0</span></div>
+</div>
+
+<button id="btn2" class="btn2" onclick="translate2()">📝 2회 번역 — 설명문</button>
+<div id="summary2"></div>
+
+<div id="progress-box">
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+  <div id="progress-text">번역 준비 중...</div>
+  <div id="timer">0초 경과</div>
+</div>
+
+<div id="summary-final"></div>
+<div id="results"></div>
+
+<script>
+const LANGS = [
+  {code:'af',name:'Afrikaans'},{code:'sq',name:'Albanian'},{code:'ar',name:'Arabic'},
+  {code:'hy',name:'Armenian'},{code:'az',name:'Azerbaijani'},{code:'bn',name:'Bengali'},
+  {code:'bs',name:'Bosnian'},{code:'bg',name:'Bulgarian'},{code:'ca',name:'Catalan'},
+  {code:'zh-Hans',name:'Chinese Simplified'},{code:'zh-Hant',name:'Chinese Traditional'},
+  {code:'hr',name:'Croatian'},{code:'cs',name:'Czech'},{code:'da',name:'Danish'},
+  {code:'nl',name:'Dutch'},{code:'en',name:'English'},{code:'et',name:'Estonian'},
+  {code:'fi',name:'Finnish'},{code:'fr',name:'French'},{code:'ka',name:'Georgian'},
+  {code:'de',name:'German'},{code:'el',name:'Greek'},{code:'gu',name:'Gujarati'},
+  {code:'he',name:'Hebrew'},{code:'hi',name:'Hindi'},{code:'hu',name:'Hungarian'},
+  {code:'is',name:'Icelandic'},{code:'id',name:'Indonesian'},{code:'it',name:'Italian'},
+  {code:'ja',name:'Japanese'},{code:'kn',name:'Kannada'},{code:'kk',name:'Kazakh'},
+  {code:'km',name:'Khmer'},{code:'ko',name:'Korean'},{code:'lo',name:'Lao'},
+  {code:'lv',name:'Latvian'},{code:'lt',name:'Lithuanian'},{code:'mk',name:'Macedonian'},
+  {code:'ms',name:'Malay'},{code:'ml',name:'Malayalam'},{code:'mt',name:'Maltese'},
+  {code:'mn',name:'Mongolian'},{code:'ne',name:'Nepali'},{code:'nb',name:'Norwegian'},
+  {code:'ps',name:'Pashto'},{code:'fa',name:'Persian'},{code:'pl',name:'Polish'},
+  {code:'pt',name:'Portuguese'},{code:'pa',name:'Punjabi'},{code:'ro',name:'Romanian'},
+  {code:'ru',name:'Russian'},{code:'sr',name:'Serbian'},{code:'si',name:'Sinhala'},
+  {code:'sk',name:'Slovak'},{code:'sl',name:'Slovenian'},{code:'so',name:'Somali'},
+  {code:'es',name:'Spanish'},{code:'sw',name:'Swahili'},{code:'sv',name:'Swedish'},
+  {code:'tl',name:'Filipino'},{code:'ta',name:'Tamil'},{code:'te',name:'Telugu'},
+  {code:'th',name:'Thai'},{code:'tr',name:'Turkish'},{code:'uk',name:'Ukrainian'},
+  {code:'ur',name:'Urdu'},{code:'uz',name:'Uzbek'},{code:'vi',name:'Vietnamese'},
+  {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
+];
+
+document.getElementById('description').addEventListener('input', function() {
+  document.getElementById('desc-count').textContent = this.value.length;
+});
+
+let timerInterval = null;
+let results1 = {};
+let results2 = {};
+
+function startTimer() {
+  const startTime = Date.now();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(1) + '초 경과';
+  }, 100);
+  return startTime;
+}
+
+async function runBatches(payload, progressLabel) {
+  const BATCH_SIZE = 15;
+  const batches = [];
+  for (let i = 0; i < LANGS.length; i += BATCH_SIZE) batches.push(LANGS.slice(i, i + BATCH_SIZE));
+
+  const allResults = {};
+  const allFailed = [];
+
+  for (let i = 0; i < batches.length; i++) {
+    document.getElementById('progress-bar').style.width = Math.round((i / batches.length) * 100) + '%';
+    document.getElementById('progress-text').textContent = progressLabel + ' ' + (i * BATCH_SIZE) + ' / ' + LANGS.length + '개 완료';
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({...payload, languages: batches[i]})
+      });
+      const data = await res.json();
+      if (data.translations) Object.assign(allResults, data.translations);
+      if (data.failed) allFailed.push(...data.failed);
+    } catch(e) { console.error('배치 오류:', e); }
+  }
+  return { allResults, allFailed };
+}
+
+async function translate1() {
+  const openai_key = document.getElementById('openai-key').value.trim();
+  const title = document.getElementById('title').value.trim();
+  const keywordsRaw = document.getElementById('keywords').value.trim();
+  if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
+  if (!title) { alert('제목을 입력하세요'); return; }
+  const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
+
+  document.getElementById('btn1').disabled = true;
+  document.getElementById('progress-box').style.display = 'block';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('summary-final').style.display = 'none';
+
+  const startTime = startTimer();
+  const { allResults, allFailed } = await runBatches({ title, description: '', keywords, openai_key }, '제목+키워드 번역 중...');
+  results1 = allResults;
+
+  clearInterval(timerInterval);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('progress-text').textContent = '✅ 1회 번역 완료!';
+  document.getElementById('timer').textContent = '소요시간: ' + elapsed + '초';
+
+  const s = document.getElementById('summary');
+  s.style.display = 'block';
+  s.innerHTML = '✅ 1회 완료 — 성공: <strong>' + Object.keys(results1).length + '개</strong> | 실패: <strong>' + allFailed.length + '개</strong> | ⏱ ' + elapsed + '초';
+
+  document.getElementById('btn1').disabled = false;
+  showFinal();
+}
+
+async function translate2() {
+  const openai_key = document.getElementById('openai-key').value.trim();
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
+  if (!title) { alert('제목을 입력하세요'); return; }
+  if (!description) { alert('설명문을 입력하세요'); return; }
+
+  document.getElementById('btn2').disabled = true;
+  document.getElementById('progress-box').style.display = 'block';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('summary-final').style.display = 'none';
+
+  const startTime = startTimer();
+  const { allResults, allFailed } = await runBatches({ title, description, keywords: '', openai_key }, '설명문 번역 중...');
+  results2 = allResults;
+
+  clearInterval(timerInterval);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('progress-text').textContent = '✅ 2회 번역 완료!';
+  document.getElementById('timer').textContent = '소요시간: ' + elapsed + '초';
+
+  const s = document.getElementById('summary2');
+  s.style.display = 'block';
+  s.innerHTML = '✅ 2회 완료 — 성공: <strong>' + Object.keys(results2).length + '개</strong> | 실패: <strong>' + allFailed.length + '개</strong> | ⏱ ' + elapsed + '초';
+
+  document.getElementById('btn2').disabled = false;
+  showFinal();
+}
+
+function showFinal() {
+  if (Object.keys(results1).length === 0) return;
+  const final = {};
+  LANGS.forEach(lang => {
+    const r1 = results1[lang.code];
+    const r2 = results2[lang.code];
+    if (r1) {
+      final[lang.code] = {
+        title: r1.title,
+        description: r2 ? r2.description : '',
+        keywords: r1.keywords || ''
+      };
+    }
+  });
+
+  const sf = document.getElementById('summary-final');
+  sf.style.display = 'block';
+  sf.innerHTML = '🌍 최종 합산 — 총 <strong>' + Object.keys(final).length + '개국</strong> 번역 완료';
+
+  let html = '';
+  for (const lang of LANGS) {
+    const t = final[lang.code];
+    if (t) {
+      html += '<div class="result"><h3>✅ ' + lang.name + ' (' + lang.code + ')</h3>' +
+        '<p><strong>제목:</strong> ' + t.title + '</p>' +
+        (t.description ? '<p><strong>설명:</strong> ' + t.description + '</p>' : '') +
+        (t.keywords ? '<p class="keywords">' + t.keywords + '</p>' : '') +
+        '</div>';
+    }
+  }
+  document.getElementById('results').innerHTML = html;
+}
+</script>
+</body>
+</html>
