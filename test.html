@@ -28,8 +28,7 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 .failed-box{background:#fff3f3;border:1px solid #ffcccc;border-radius:4px;padding:12px;margin:6px 0;font-size:13px;}
 .keywords{color:#1565C0;font-weight:bold;}
 .key-box{background:#fffde7;border:1px solid #ffe082;border-radius:4px;padding:12px;margin-bottom:8px;}
-.section{background:white;border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}
-.section-title{font-size:15px;font-weight:bold;color:#333;margin-bottom:12px;}
+.warn{color:#e65100;font-size:12px;font-weight:normal;}
 </style>
 </head>
 <body>
@@ -43,19 +42,17 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <label>YouTube 제목</label>
 <input type="text" id="title" placeholder="예: 피아노 힐링 음악 1시간">
 
+<label>YouTube 설명문 <span class="warn">⚠ 100자 초과시 번역을 두 번으로 나누어 하셔야 오류가 없습니다 (현존 전세계 시스템의 글자 제한 때문)</span></label>
+<textarea id="description" rows="4" placeholder="예: 편안한 피아노 음악으로 하루의 피로를 풀어보세요"></textarea>
+<div style="text-align:right;font-size:12px;color:#888;">글자수: <span id="desc-count">0</span></div>
+
 <label>키워드 (쉼표로 구분)</label>
 <input type="text" id="keywords" placeholder="예: 힐링, 피아노, 음악, 수면, 휴식">
 
-<button id="btn1" onclick="translate1()">🚀 1회 번역 — 제목+키워드</button>
+<button id="btn1" onclick="translate1()">🚀 70개국 번역 시작</button>
+<button id="btn2" class="btn2" onclick="translate2()" style="display:none;">📝 2회 번역 — 설명문 (100자 초과)</button>
+
 <div id="summary"></div>
-
-<div style="margin-top:20px;">
-<label>YouTube 설명문 <span style="font-weight:normal;color:#e65100;font-size:12px;">⚠ 별도 번역 — 버튼을 눌러 실행하세요</span></label>
-<textarea id="description" rows="4" placeholder="예: 편안한 피아노 음악으로 하루의 피로를 풀어보세요"></textarea>
-<div style="text-align:right;font-size:12px;color:#888;">글자수: <span id="desc-count">0</span></div>
-</div>
-
-<button id="btn2" class="btn2" onclick="translate2()">📝 2회 번역 — 설명문</button>
 <div id="summary2"></div>
 
 <div id="progress-box">
@@ -95,13 +92,16 @@ const LANGS = [
   {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
 ];
 
-document.getElementById('description').addEventListener('input', function() {
-  document.getElementById('desc-count').textContent = this.value.length;
-});
-
 let timerInterval = null;
 let results1 = {};
 let results2 = {};
+
+// 설명문 글자수 감지 → 버튼 표시/숨김
+document.getElementById('description').addEventListener('input', function() {
+  const len = this.value.length;
+  document.getElementById('desc-count').textContent = len;
+  document.getElementById('btn2').style.display = len > 100 ? 'block' : 'none';
+});
 
 function startTimer() {
   const startTime = Date.now();
@@ -116,10 +116,8 @@ async function runBatches(payload, progressLabel) {
   const BATCH_SIZE = 15;
   const batches = [];
   for (let i = 0; i < LANGS.length; i += BATCH_SIZE) batches.push(LANGS.slice(i, i + BATCH_SIZE));
-
   const allResults = {};
   const allFailed = [];
-
   for (let i = 0; i < batches.length; i++) {
     document.getElementById('progress-bar').style.width = Math.round((i / batches.length) * 100) + '%';
     document.getElementById('progress-text').textContent = progressLabel + ' ' + (i * BATCH_SIZE) + ' / ' + LANGS.length + '개 완료';
@@ -140,19 +138,22 @@ async function runBatches(payload, progressLabel) {
 async function translate1() {
   const openai_key = document.getElementById('openai-key').value.trim();
   const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
   const keywordsRaw = document.getElementById('keywords').value.trim();
   if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
   if (!title) { alert('제목을 입력하세요'); return; }
   const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
+  const desc = description.length > 100 ? '' : description;
 
   document.getElementById('btn1').disabled = true;
+  document.getElementById('btn2').disabled = true;
   document.getElementById('progress-box').style.display = 'block';
   document.getElementById('progress-bar').style.width = '0%';
   document.getElementById('results').innerHTML = '';
   document.getElementById('summary-final').style.display = 'none';
 
   const startTime = startTimer();
-  const { allResults, allFailed } = await runBatches({ title, description: '', keywords, openai_key }, '제목+키워드 번역 중...');
+  const { allResults, allFailed } = await runBatches({ title, description: desc, keywords, openai_key }, '번역 중...');
   results1 = allResults;
 
   clearInterval(timerInterval);
@@ -166,6 +167,7 @@ async function translate1() {
   s.innerHTML = '✅ 1회 완료 — 성공: <strong>' + Object.keys(results1).length + '개</strong> | 실패: <strong>' + allFailed.length + '개</strong> | ⏱ ' + elapsed + '초';
 
   document.getElementById('btn1').disabled = false;
+  document.getElementById('btn2').disabled = false;
   showFinal();
 }
 
@@ -174,9 +176,9 @@ async function translate2() {
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
-  if (!title) { alert('제목을 입력하세요'); return; }
   if (!description) { alert('설명문을 입력하세요'); return; }
 
+  document.getElementById('btn1').disabled = true;
   document.getElementById('btn2').disabled = true;
   document.getElementById('progress-box').style.display = 'block';
   document.getElementById('progress-bar').style.width = '0%';
@@ -196,6 +198,7 @@ async function translate2() {
   s.style.display = 'block';
   s.innerHTML = '✅ 2회 완료 — 성공: <strong>' + Object.keys(results2).length + '개</strong> | 실패: <strong>' + allFailed.length + '개</strong> | ⏱ ' + elapsed + '초';
 
+  document.getElementById('btn1').disabled = false;
   document.getElementById('btn2').disabled = false;
   showFinal();
 }
@@ -209,7 +212,7 @@ function showFinal() {
     if (r1) {
       final[lang.code] = {
         title: r1.title,
-        description: r2 ? r2.description : '',
+        description: r2 ? r2.description : (r1.description || ''),
         keywords: r1.keywords || ''
       };
     }
