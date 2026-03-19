@@ -5,21 +5,23 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
   try {
-    const { title, description, languages } = req.body;
+    const { title, description, keywords, languages } = req.body;
 
     const results = {};
     const failed = [];
 
     const translateOne = async (lang) => {
-      const prompt = `Translate the following YouTube video title and description into ${lang.name} (language code: ${lang.code}).
+      const prompt = `Translate the following YouTube video title, description, and keywords into ${lang.name} (language code: ${lang.code}).
 
 CRITICAL RULES:
 1. Output MUST be entirely in ${lang.name}. Do NOT include any Korean characters whatsoever.
-2. Return ONLY valid JSON in this exact format: {"title": "...", "description": "..."}
-3. No markdown, no code blocks, no explanation.
+2. Return ONLY valid JSON in this exact format: {"title": "...", "description": "...", "keywords": "..."}
+3. For keywords, keep the # symbol before each keyword.
+4. No markdown, no code blocks, no explanation.
 
 Title: ${title}
-Description: ${description}`;
+Description: ${description}
+Keywords: ${keywords || ''}`;
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -38,7 +40,6 @@ Description: ${description}`;
       const data = await response.json();
       const text = data.content?.[0]?.text || '';
 
-      // 한글 잔존 검증
       const hasKorean = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/.test(text);
       if (hasKorean) return null;
 
@@ -53,13 +54,8 @@ Description: ${description}`;
     };
 
     for (const lang of languages) {
-      // 1차 시도
       let result = await translateOne(lang);
-
-      // 실패시 1회 재시도
-      if (!result) {
-        result = await translateOne(lang);
-      }
+      if (!result) result = await translateOne(lang);
 
       if (result) {
         results[lang.code] = result;
