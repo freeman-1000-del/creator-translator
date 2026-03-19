@@ -8,7 +8,6 @@ export default async function handler(req, res) {
 
   try {
     const { title, description, keywords, languages, openai_key } = req.body;
-    const isLongDesc = description && description.length > 100;
 
     if (!openai_key || !openai_key.startsWith('sk-')) {
       return res.status(401).json({ error: 'OpenAI API Key가 필요합니다.' });
@@ -19,7 +18,6 @@ export default async function handler(req, res) {
 
     const translateOne = async (lang) => {
       const prompt = `Translate the following YouTube content into ${lang.name} (${lang.code}).
-
 RULES:
 1. Output MUST be entirely in ${lang.name}. No Korean characters.
 2. Return ONLY valid JSON: {"title":"...","description":"...","keywords":"..."}
@@ -27,9 +25,7 @@ RULES:
 4. No markdown, no code blocks.
 
 Title: ${title}
-${isLongDesc
-  ? `Description (translate faithfully, preserve full meaning, natural expression in ${lang.name}): ${description}`
-  : `Description: ${description || ''}`}
+Description: ${description || ''}
 Keywords: ${keywords || ''}`;
 
       for (let attempt = 0; attempt < 2; attempt++) {
