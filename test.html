@@ -95,7 +95,8 @@ async function startTranslate() {
   const keywordsRaw = document.getElementById('keywords').value.trim();
 
   if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요 (sk-로 시작)'); return; }
-  if (!title) { alert('제목을 입력하세요'); return; }
+ document.getElementById('desc-count').textContent = description.length;
+if (!title) { alert('제목을 입력하세요'); return; }
 
   const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
   const startTime = Date.now();
