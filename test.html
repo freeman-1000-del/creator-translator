@@ -27,7 +27,6 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 .result p{margin:3px 0;color:#555;font-size:12px;}
 .failed-box{background:#fff3f3;border:1px solid #ffcccc;border-radius:4px;padding:12px;margin:6px 0;font-size:13px;}
 .keywords{color:#1565C0;font-weight:bold;}
-.key-box{background:#fffde7;border:1px solid #ffe082;border-radius:4px;padding:12px;margin-bottom:8px;}
 .warn{color:#e65100;font-size:12px;font-weight:normal;}
 </style>
 </head>
@@ -44,13 +43,8 @@ button:disabled{background:#ccc;cursor:not-allowed;}
 <label>키워드 (쉼표로 구분)</label>
 <input type="text" id="keywords" placeholder="예: 힐링, 피아노, 음악, 수면, 휴식">
 
-<div class="key-box" style="display:none;">
-<label>🔑 OpenAI API Key</label>
-<input type="password" id="openai-key" value="placeholder">
-</div>
-
 <button id="btn1" onclick="translate1()">🚀 70개국 맥락번역 시작</button>
-<button id="btn2" class="btn2" onclick="translate2()" style="display:none;">📝 2회 번역 — 설명문 100자 초과시 눌러 주세요.</button>
+<button id="btn2" class="btn2" onclick="translate2()" style="display:none;">📝 2회 번역 — 설명문 (100자 초과시 눌러 주세요)</button>
 
 <div id="summary"></div>
 <div id="summary2"></div>
@@ -92,16 +86,15 @@ const LANGS = [
   {code:'cy',name:'Welsh'},{code:'zu',name:'Zulu'}
 ];
 
-let timerInterval = null;
-let results1 = {};
-let results2 = {};
-
-// 설명문 글자수 감지 → 버튼 표시/숨김
 document.getElementById('description').addEventListener('input', function() {
   const len = this.value.length;
   document.getElementById('desc-count').textContent = len;
   document.getElementById('btn2').style.display = len > 100 ? 'block' : 'none';
 });
+
+let timerInterval = null;
+let results1 = {};
+let results2 = {};
 
 function startTimer() {
   const startTime = Date.now();
@@ -136,11 +129,9 @@ async function runBatches(payload, progressLabel) {
 }
 
 async function translate1() {
-  const openai_key = document.getElementById('openai-key').value.trim();
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const keywordsRaw = document.getElementById('keywords').value.trim();
-  if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
   if (!title) { alert('제목을 입력하세요'); return; }
   const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
   const desc = description.length > 100 ? '' : description;
@@ -153,7 +144,7 @@ async function translate1() {
   document.getElementById('summary-final').style.display = 'none';
 
   const startTime = startTimer();
-  const { allResults, allFailed } = await runBatches({ title, description: desc, keywords, openai_key }, '번역 중...');
+  const { allResults, allFailed } = await runBatches({ title, description: desc, keywords }, '번역 중...');
   results1 = allResults;
 
   clearInterval(timerInterval);
@@ -172,10 +163,8 @@ async function translate1() {
 }
 
 async function translate2() {
-  const openai_key = document.getElementById('openai-key').value.trim();
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
-  if (!openai_key || !openai_key.startsWith('sk-')) { alert('OpenAI API Key를 입력하세요'); return; }
   if (!description) { alert('설명문을 입력하세요'); return; }
 
   document.getElementById('btn1').disabled = true;
@@ -185,7 +174,7 @@ async function translate2() {
   document.getElementById('summary-final').style.display = 'none';
 
   const startTime = startTimer();
-  const { allResults, allFailed } = await runBatches({ title, description, keywords: '', openai_key }, '설명문 번역 중...');
+  const { allResults, allFailed } = await runBatches({ title, description, keywords: '' }, '설명문 번역 중...');
   results2 = allResults;
 
   clearInterval(timerInterval);
