@@ -9,9 +9,8 @@ export default async function handler(req, res) {
   try {
     const { title, description, keywords, languages, openai_key } = req.body;
 
-    if (!openai_key || !openai_key.startsWith('sk-')) {
-      return res.status(401).json({ error: 'OpenAI API Key가 필요합니다.' });
-    }
+   // openai_key는 향후 사용 예정
+    
     if (!title || !languages || !languages.length) {
       return res.status(400).json({ error: 'title과 languages는 필수입니다.' });
     }
