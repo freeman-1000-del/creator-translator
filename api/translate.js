@@ -39,11 +39,13 @@ Keywords: ${keywords || ''}`;
             },
             body: JSON.stringify({
               model: 'claude-haiku-4-5-20251001',
-              max_tokens: 500,
+              max_tokens: 500,const text = data.content?.[0]?.text || '';
+if (/[\uAC00-\uD7AF]/.test(text)) continue;
               messages: [{ role: 'user', content: prompt }]
             })
           });
-          const data = await response.json();
+          const text = data.content?.[0]?.text || '';
+console.log('Claude 응답:', text.substring(0, 100));
           const text = data.content?.[0]?.text || '';
           if (/[\uAC00-\uD7AF]/.test(text)) continue;
           const clean = text.replace(/```json|```/g, '').trim();
