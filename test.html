@@ -132,7 +132,8 @@ async function translate1() {
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const keywordsRaw = document.getElementById('keywords').value.trim();
-  if (!title) { alert('제목을 입력하세요'); return; }
+  if (!title) { alert('제목을 입력하세요: [' + title + ']'); return; }
+console.log('title:', title, 'desc:', description.length);
   const keywords = keywordsRaw ? keywordsRaw.split(',').map(k => '#' + k.trim()).join(' ') : '';
   const desc = description.length > 100 ? '' : description;
 
