@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const { title, description, keywords, languages, openai_key } = req.body;
-console.log('받은 데이터:', JSON.stringify({ title, languagesCount: languages?.length }));
+console.log('받은 데이터:', JSON.stringify({ title, languagesCount: languages?.length, langs0: languages?.[0] }));
 
    // openai_key는 향후 사용 예정
     
