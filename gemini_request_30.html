@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Humateck | 30개국 전용 제미나이 번역 의뢰</title><link rel="stylesheet" href="style.css"></head><body><a href="index.html" class="go-home-link">첫 페이지로</a>
+<div class="page-wrap"><div class="panel" style="max-width:1000px;margin:0 auto;">
+<div class="center-topbar"><h1>30개국 전용 제미나이 번역 의뢰</h1><a href="plans.html" class="btn light">플랜 페이지로 돌아가기</a></div>
+<div class="block"><div class="block-title">원문 입력</div>
+<label>원문 제목</label><textarea id="g30Title" rows="3" placeholder="제목을 입력해 주세요."></textarea>
+<label>원문 설명문</label><textarea id="g30Desc" rows="10" placeholder="설명문을 입력해 주세요."></textarea>
+<div class="row" style="margin-top:12px;"><button id="g30BuildBtn" class="primary">제미나이 번역의뢰문 만들기</button><button id="g30CopyBtn" class="light">복사</button><button id="g30ChatBtn" class="light">챗번역하러 가기</button></div>
+</div>
+<div class="block"><div class="block-title">제미나이 번역의뢰문</div><textarea id="g30Prompt" rows="22" placeholder="버튼을 누르면 30개국 전용 의뢰문이 생성됩니다."></textarea></div>
+</div></div>
+<script>
+const G30_GUIDE = `ko | South Korea
+en-US | United States
+en-GB | United Kingdom
+es | Spain
+fr | France
+de | Germany
+pt | Portugal
+it | Italy
+ja | Japan
+zh-CN | China (Simplified)
+zh-TW | Taiwan (Traditional)
+ar | Saudi Arabia
+hi | India
+ru | Russia
+nl | Netherlands
+pl | Poland
+tr | Turkey
+sv | Sweden
+da | Denmark
+fi | Finland
+cs | Czech Republic
+ro | Romania
+hu | Hungary
+el | Greece
+th | Thailand
+id | Indonesia
+ms | Malaysia
+vi | Vietnam
+uk | Ukraine
+eu | Basque`;
+const G30_PROMPT = `제미나이 의뢰문
+
+안녕 제미나이!
+아래 제목과 설명문을 30개 국가 세트에 맞춰 자연스럽게 현지화 번역해 줘.
+처음부터 끝까지 중간에 끊지 말고 계속 번역해 줘.
+
+[원문]
+Title: {title}
+
+Description:
+{desc}
+
+[출력 형식]
+Number: 순번
+Country Code: 언어코드
+Country Name: 영어 국가명
+Title: 번역된 제목
+Description:
+번역된 설명문
+
+[핵심 원칙]
+1. 처음부터 끝까지 절대 끊지 말고 계속 번역해 줘.
+2. 작업내용 설명, 머리말, 맺음말, 해설문은 넣지 말아 줘.
+3. 아래 대응표의 Country Code와 Country Name을 그대로 사용할 것
+4. 블록 순서는 절대 바꾸지 말 것
+5. 각 블록은 반드시 Country Code로 시작할 것
+6. Description의 문단 구조와 줄바꿈은 원문 흐름을 유지할 것
+7. 제목, 설명문 외의 군소리, 키워드 줄, 해시태그, 코드블록, HTML은 넣지 말 것
+8. 작업이 끝났으면 아래로 이동해 줘.
+
+[Country Code / Country Name 대응표]
+{guide}
+
+[반드시 사용할 언어코드 및 순서]
+"ko", "en-US", "en-GB", "es", "fr", "de", "pt", "it", "ja", "zh-CN", "zh-TW", "ar", "hi", "ru", "nl", "pl", "tr", "sv", "da", "fi", "cs", "ro", "hu", "el", "th", "id", "ms", "vi", "uk", "eu"
+`;
+const $=(id)=>document.getElementById(id);
+$("g30BuildBtn").addEventListener("click",()=>{
+  $("g30Prompt").value = G30_PROMPT.replaceAll("{title}", ($("g30Title").value||"").trim() || "[제목을 입력해 주세요]").replaceAll("{desc}", ($("g30Desc").value||"").trim() || "[설명문을 입력해 주세요]").replaceAll("{guide}", G30_GUIDE);
+});
+$("g30CopyBtn").addEventListener("click", async()=>{ try{ await navigator.clipboard.writeText($("g30Prompt").value); alert("복사되었습니다."); }catch{ alert("복사에 실패했습니다."); } });
+$("g30ChatBtn").addEventListener("click",()=>{ window.open("https://gemini.google.com/","_blank","noopener,noreferrer"); });
+</script>
+</body></html>

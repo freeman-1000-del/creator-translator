@@ -1,0 +1,337 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Humateck | 첫페이지</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script></head><body><div class="topbar"><div class="topbar-inner" style="width:100%;box-sizing:border-box;"><img src="FINAL_LOGO01.png" alt="Humateck 로고" class="brand-logo-image"><div class="topbar-auth" id="topbarAuth" style="display:flex;gap:8px;margin-left:auto;"><button class="btn btn-light btn-sm" id="loginModalBtn">로그인</button>
+<div class="user-icon-wrap hidden" id="userIconWrap">
+  <button class="user-avatar-btn" id="userAvatarBtn">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#c8a84b"/>
+      <circle cx="16" cy="12" r="5" fill="#fff"/>
+      <ellipse cx="16" cy="26" rx="9" ry="6" fill="#fff"/>
+    </svg>
+  </button>
+  <div class="user-dropdown hidden" id="userDropdown">
+    <div class="user-dropdown-name" id="userDropdownName"></div>
+    <div class="user-dropdown-email" id="userDropdownEmail"></div>
+    <hr style="border:none;border-top:1px solid #e4e9f0;margin:8px 0;">
+    <button class="user-dropdown-item" id="goOrderFromIcon">📋 주문 페이지</button>
+    <button class="user-dropdown-item" id="logoutBtn">🚪 로그아웃</button>
+  </div>
+</div><button class="btn btn-primary btn-sm" id="signupModalBtn" type="button" disabled style="opacity:.55;cursor:not-allowed;">구독회원 가입 준비중</button></div></div></div>
+<div class="page-wrap">
+<section class="card"><div class="hero-copy"><div class="eyebrow">번역부터 등록까지 빠르고 편한 전세계 유튜브 크리에이터들의 번역노동 해방 솔루션</div><div class="headline">등록시간 1초, 초고속 글로벌 고품질자막 등록서비스(유튜브)</div><div class="headline-sub">번역은 고객 맞춤, 배송은 휴마텍이.</div></div><div style="text-align:center;margin-top:18px;"><img src="hero_image.jpg" alt="대표 배너 이미지" style="width:35%;max-width:600px;border-radius:12px;"></div></section><br>
+<div style="text-align:center;font-size:18px;font-weight:700;color:#cdd8e8;margin:18px 0 8px;"><span style="color:#f5c518;font-weight:600;">이제는 번역품질을 주문자가 직접 결정하는 시대입니다.</span><br><br></div>
+<section style="margin-top:6px;"><article class="plan-card recommended" style="max-width:760px;margin:0 auto;"><h2 style="margin:0 0 6px;font-size:20px;">고품질 AI 챗번역이란?</h2>
+<div class="plan-desc">기계식 번역이 아닌, 자연스럽고 세밀한 번역 결과를 원하는 고객님께 적합합니다.<br>
+직접 AI와 대화하며 고객님의 취향과 의도에 맞추어 번역 결과를 준비하는 방식입니다.<br>
+현지어 맥락 반영과 반복 검수 주문이 얼마든지 가능한 심층 AI 번역방식입니다.</div><div class="help-box"><div class="notice-strong">사용 구조</div>
+<div class="muted">유튜브 API를 사용 (할당량 범위 내 무료)합니다.</div>
+<div class="muted">고객님은 맞춤번역을, Humateck은 1초 등록을 책임집니다.</div>
+</div>
+<div style="margin-top:16px;" >
+<a class="btn btn-primary" href="plans.html?mode=chat">번역 플랜 보러 가기</a>
+<a class="btn btn-primary" href="trial_choice.html">무료체험 하기</a>
+<a class="btn btn-primary" href="order.html?subscriber=1&count=70&plan=monthly70&mode=chat">기존 구독회원 바로가기</a></div></article></section>
+
+<div style="text-align:center;padding:12px 0;"><a href="terms_ko.html" style="color:#cdd8e8;font-size:13px;font-weight:700;margin:0 16px;text-decoration:none;border-bottom:1px solid #c8a84b;padding-bottom:2px;">📄 이용약관</a><a href="privacy_ko.html" style="color:#cdd8e8;font-size:13px;font-weight:700;margin:0 16px;text-decoration:none;border-bottom:1px solid #c8a84b;padding-bottom:2px;">🔒 개인정보처리방침</a><a href="refund_ko.html" style="color:#cdd8e8;font-size:13px;font-weight:700;margin:0 16px;text-decoration:none;border-bottom:1px solid #c8a84b;padding-bottom:2px;">💰 환불정책</a></div>
+<section class="bottom-trigger-wrap" style="justify-content:flex-end;"><div class="settings-dropdown-wrap"><button class="btn bottom-trigger settings-toggle-btn" id="settingsToggleBtn">⚙ 설정</button><div class="settings-dropdown hidden" id="settingsDropdown"><button class="btn bottom-trigger" data-panel="servicePanel">서비스</button><button class="btn bottom-trigger" data-panel="pricePanel">구독 요금</button><button class="btn bottom-trigger" data-panel="accountPanel">구독자 계정</button><button class="btn bottom-trigger" data-panel="cancelPanel">구독취소</button><button class="btn bottom-trigger" data-panel="csPanel">고객센터</button></div></div></section>
+<section id="servicePanel" class="bottom-panel card"><div class="bottom-menu-grid"><div class="menu-tile"><h4>서비스</h4><div class="muted">유튜브 크리에이터의 유튜브채널 자막 번역 및 등록을 다음과 같은 형태로 서비스합니다.<br><br>1) AI 상세검수 및 현지화 번역 지원 및 초고속 유튜브 등록 대행</div></div></div></section>
+<section id="pricePanel" class="bottom-panel card"><div class="bottom-menu-grid"><div class="menu-tile"><h4>30개국</h4><div class="muted">16,500원 / 월</div></div><div class="menu-tile"><h4>50개국</h4><div class="muted">25,000원 / 월</div></div><div class="menu-tile"><h4>70개국</h4><div class="muted">32,500원 / 월</div></div><div class="menu-tile"><h4>70개국 연간</h4><div class="muted">292,500원 / 년</div></div></div></section>
+<section id="accountPanel" class="bottom-panel card"><div class="bottom-menu-grid"><div class="menu-tile"><h4>구독자 계정</h4><div class="muted">활성 구독회원은 로그인 후 바로 주문페이지로 진입합니다.</div></div></div></section>
+
+<section id="cancelPanel" class="bottom-panel card"><div class="bottom-menu-grid"><div class="menu-tile"><h4>구독취소</h4><div class="muted">이미 결제된 구독기간에 대한 환불은 불가하며, 현재 계약 종료일까지는 계속 이용 가능합니다.</div></div></div></section>
+<section id="csPanel" class="bottom-panel card"><div class="bottom-menu-grid"><div class="menu-tile"><h4>FAQ</h4><div class="faq-item"><div class="faq-q">1. 구글 OAuth 설정이 무엇인가요? 사용시마다 설정해야 하나요?</div><div class="muted">내 유튜브 채널에 자막을 등록해도 좋다고 구글에 허락받는 연결 과정입니다. 처음 1회만 설정하시면 됩니다.</div></div><div class="faq-item"><div class="faq-q">2. 여러 채널을 운영 중입니다. OAuth 설정을 단 한번만 받아도 되나요?</div><div class="muted">구글의 정책상, 보유하신 채널당 한 번씩의 설정이 필요합니다.</div></div><div class="faq-item"><div class="faq-q">3. 번역 등록 후 설명문칸이 비어 있습니다.</div><div class="muted">유튜브 스튜디오 '세부정보' → '자막' → '동영상 언어 설정'을 확인하십시오. 작성하신 언어와 일치하지 않으면 설명란이 공백으로 남게 됩니다.</div></div><div class="faq-item"><div class="faq-q">4. 유튜브 자막 등록하기를 누르니 할당량 초과 메시지가 뜹니다.</div><div class="muted">유튜브 자막등록 일일 API 무료할당량이 초과된 경우입니다. 다음날 할당량이 재충전될 때까지 기다렸다가 다시 시도하시기 바랍니다.</div></div><div class="faq-item"><div class="faq-q">5. '유튜브 영상 주소에서 videoId를 찾지 못했습니다.' 메시지가 뜹니다.</div><div class="muted">유튜브 주소를 잘못 입력하신 경우입니다. 반드시 유튜브 동영상(스튜디오 ×)의 주소를 그대로 복사하여 붙여 넣어 주시기 바랍니다.</div></div><div class="faq-item"><div class="faq-q">6. YouTube Data API 할당량이란 무엇인가요?</div><div class="muted">유튜브가 하루 제한량을 설정하는데 이를 API 할당량이라고 합니다. 기본적으로 일일 10,000단위가 주어지며, 태평양 표준시(PT) 자정에 재설정됩니다.</div></div></div><div class="menu-tile"><h4>고객과의 대화창</h4><div class="chat-box"><div class="chat-log" id="customerChatLog"><div class="chat-bubble-bot">안녕하세요. 무엇이 어려우신가요? 간단히 남겨 주세요.</div></div><div class="chat-input-row"><textarea id="customerChatInput" placeholder="예: OAuth 클라이언트 ID를 어디서 찾는지 모르겠습니다."></textarea><button type="button" class="btn btn-primary" id="customerChatSendBtn">보내기</button></div></div></div></div></section>
+</div>
+
+<script src="app.js"></script>
+<script>
+document.getElementById('settingsToggleBtn').addEventListener('click', function() {
+  document.getElementById('settingsDropdown').classList.toggle('hidden');
+});
+document.addEventListener('click', function(e) {
+  var wrap = document.querySelector('.settings-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('settingsDropdown').classList.add('hidden');
+});
+document.querySelectorAll('[data-panel]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var panelId = this.getAttribute('data-panel');
+    document.querySelectorAll('.bottom-panel').forEach(function(p) { p.classList.remove('open'); });
+    var target = document.getElementById(panelId);
+    if (target) target.classList.add('open');
+    document.getElementById('settingsDropdown').classList.add('hidden');
+  });
+});
+</script>
+
+<!-- ── 로그인 모달 ── -->
+<div id="loginModal" class="login-modal-overlay hidden">
+  <div class="login-modal-box">
+    <button class="login-modal-close" id="loginModalClose">✕</button>
+    <div class="login-modal-top">
+      <div class="login-avatar">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+          <circle cx="40" cy="40" r="40" fill="rgba(255,255,255,0.15)"/>
+          <circle cx="40" cy="30" r="14" fill="rgba(255,255,255,0.85)"/>
+          <ellipse cx="40" cy="62" rx="22" ry="14" fill="rgba(255,255,255,0.85)"/>
+        </svg>
+      </div>
+      <h2 class="login-title">Humateck 로그인</h2>
+    </div>
+    <div class="login-modal-body">
+      <div class="login-field">
+        <span class="login-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </span>
+        <input type="text" id="loginEmail" placeholder="이메일 주소" class="login-input">
+      </div>
+      <div class="login-field">
+        <span class="login-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input type="password" id="loginPw" placeholder="비밀번호" class="login-input">
+      </div>
+      <div class="login-options">
+        <label class="login-remember"><input type="checkbox"> 로그인 상태 유지</label>
+        <a href="#" class="login-forgot">비밀번호 찾기</a>
+      </div>
+      <button class="login-submit-btn" id="loginSubmitBtn">Login</button>
+      <div id="loginMsg" class="login-msg hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SUPABASE_URL  = 'https://agxxpcgxgggkcdqvwmvg.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFneHhwY2d4Z2dna2NkcXZ3bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MzA0MzAsImV4cCI6MjA5MTIwNjQzMH0.lmbWyY3sxfowqA_2L4PKp2_VOyxm4dBdZIW43aLxM-0';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const btn   = document.getElementById('loginModalBtn');
+  const modal = document.getElementById('loginModal');
+  const close = document.getElementById('loginModalClose');
+  const sub   = document.getElementById('loginSubmitBtn');
+  const msg   = document.getElementById('loginMsg');
+
+  // 세션 확인 → 로그인 상태면 아이콘 표시
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (session) {
+      showUserIcon(session);
+    }
+  });
+
+  async function showUserIcon(session) {
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    const plan  = profile?.plan || 'monthly70';
+    const count = plan.includes('30') ? '30' : plan.includes('50') ? '50' : '70';
+    const name  = profile?.name || session.user.email;
+    // 로그인 버튼 숨기고 아이콘 표시
+    btn.classList.add('hidden');
+    document.getElementById('signupModalBtn')?.classList.add('hidden');
+    document.getElementById('userIconWrap').classList.remove('hidden');
+    document.getElementById('userDropdownName').textContent = name + '님';
+    document.getElementById('userDropdownEmail').textContent = session.user.email;
+    // 주문 페이지 이동
+    document.getElementById('goOrderFromIcon')?.addEventListener('click', () => {
+      location.href = `order.html?subscriber=1&count=${count}&plan=${plan}&mode=chat`;
+    });
+    // 로그아웃
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+      await sb.auth.signOut();
+      location.reload();
+    });
+  }
+
+  // 아이콘 클릭 → 드롭다운 토글
+  document.getElementById('userAvatarBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('userDropdown').classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('userDropdown')?.classList.add('hidden');
+  });
+
+  btn?.addEventListener('click', () => modal.classList.remove('hidden'));
+  close?.addEventListener('click', () => modal.classList.add('hidden'));
+  modal?.addEventListener('click', e => { if(e.target === modal) modal.classList.add('hidden'); });
+
+  sub?.addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw    = document.getElementById('loginPw').value.trim();
+    if (!email || !pw) {
+      msg.textContent = '이메일과 비밀번호를 입력해 주세요.';
+      msg.className = 'login-msg login-msg-error'; return;
+    }
+    msg.textContent = '로그인 중...';
+    msg.className = 'login-msg login-msg-ok';
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+      if (error) throw error;
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+      const plan  = profile?.plan || 'monthly70';
+      const count = plan.includes('30') ? '30' : plan.includes('50') ? '50' : '70';
+      msg.textContent = '로그인 성공! 이동 중...';
+      setTimeout(() => {
+        location.href = `order.html?subscriber=1&count=${count}&plan=${plan}&mode=chat`;
+      }, 600);
+    } catch(e) {
+      msg.textContent = e.message.includes('Invalid') ? '이메일 또는 비밀번호가 올바르지 않습니다.' : e.message;
+      msg.className = 'login-msg login-msg-error';
+    }
+  });
+})();
+</script>
+
+
+<!-- ── 회원가입 모달 ── -->
+<div id="signupModal" class="login-modal-overlay hidden">
+  <div class="login-modal-box" style="max-width:480px;">
+    <button class="login-modal-close" id="signupModalClose">✕</button>
+    <div class="login-modal-top" style="padding:30px 32px 24px;">
+      <div class="login-avatar">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+          <circle cx="40" cy="40" r="40" fill="rgba(255,255,255,0.15)"/>
+          <circle cx="40" cy="30" r="14" fill="rgba(255,255,255,0.85)"/>
+          <ellipse cx="40" cy="62" rx="22" ry="14" fill="rgba(255,255,255,0.85)"/>
+        </svg>
+      </div>
+      <h2 class="login-title">Humateck 회원가입</h2>
+      <p style="color:rgba(255,255,255,0.82);font-size:13px;margin:0;">전세계 유튜브 크리에이터들의 번역노동 해방 솔루션</p>
+    </div>
+    <div class="login-modal-body" style="gap:13px;">
+
+      <div class="signup-row">
+        <div class="signup-label">아이디 <span class="req">*</span></div>
+        <div class="signup-field-row">
+          <div class="login-field" style="flex:1;">
+            <span class="login-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </span>
+            <input type="email" id="suEmail" placeholder="이메일 주소 입력" class="login-input">
+          </div>
+          <button class="signup-check-btn" id="emailCheckBtn">중복 확인</button>
+        </div>
+        <div class="signup-hint">사용할 수 있는 이메일 형식으로 입력하세요.</div>
+      </div>
+
+      <div class="signup-row">
+        <div class="signup-label">비밀번호 <span class="req">*</span> <span class="signup-hint-inline">영문자, 숫자, 특수문자 포함 8~20자</span></div>
+        <div class="login-field">
+          <span class="login-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" id="suPw" placeholder="비밀번호를 입력하세요" class="login-input">
+        </div>
+      </div>
+
+      <div class="signup-row">
+        <div class="signup-label">비밀번호 확인 <span class="req">*</span></div>
+        <div class="login-field">
+          <span class="login-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" id="suPwConfirm" placeholder="비밀번호를 다시 입력하세요" class="login-input">
+        </div>
+      </div>
+
+      <div class="signup-row">
+        <div class="signup-label">이름 <span class="req">*</span></div>
+        <div class="login-field">
+          <span class="login-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+          </span>
+          <input type="text" id="suName" placeholder="이름을 입력하세요" class="login-input">
+        </div>
+      </div>
+
+      <div class="signup-row">
+        <div class="signup-label">구독 플랜 <span style="font-size:11px;color:#9ab2c8;">(선택 - 나중에 결제 시 확정)</span></div>
+        <div class="login-field" style="padding:0 18px;">
+          <select id="suPlan" class="login-input" style="cursor:pointer;">
+            <option value="">-- 나중에 선택 --</option>
+                        <option value="monthly30">30개국 / 16,500원 / 월</option>
+            <option value="monthly50">50개국 / 25,000원 / 월</option>
+            <option value="monthly70">70개국 / 32,500원 / 월 (추천)</option>
+            <option value="annual70">70개국 / 292,500원 / 년</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="signupMsg" class="login-msg hidden"></div>
+
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="login-submit-btn" id="signupSubmitBtn" style="background:linear-gradient(135deg,#0e7cad,#16b89e);">가입하기</button>
+        <button class="signup-cancel-btn" id="signupCancelBtn">취소</button>
+      </div>
+
+      <p style="text-align:center;font-size:13px;color:#617087;margin:0;">
+        이미 계정이 있으신가요?
+        <button id="goLoginFromSignup" style="background:none;border:none;color:#0e7cad;font-weight:700;cursor:pointer;font-size:13px;">로그인</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SURL  = 'https://agxxpcgxgggkcdqvwmvg.supabase.co';
+  const SANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFneHhwY2d4Z2dna2NkcXZ3bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MzA0MzAsImV4cCI6MjA5MTIwNjQzMH0.lmbWyY3sxfowqA_2L4PKp2_VOyxm4dBdZIW43aLxM-0';
+  const sb = supabase.createClient(SURL, SANON);
+
+  const signupBtn   = document.getElementById('signupModalBtn');
+  const signupModal = document.getElementById('signupModal');
+  const signupClose = document.getElementById('signupModalClose');
+  const cancelBtn   = document.getElementById('signupCancelBtn');
+  const submitBtn   = document.getElementById('signupSubmitBtn');
+  const msg         = document.getElementById('signupMsg');
+  const loginModal  = document.getElementById('loginModal');
+  const goLogin     = document.getElementById('goLoginFromSignup');
+  const emailCheck  = document.getElementById('emailCheckBtn');
+
+  const openModal  = () => signupModal.classList.remove('hidden');
+  const closeModal = () => signupModal.classList.add('hidden');
+
+  signupBtn?.addEventListener('click', (e) => { e.preventDefault(); alert('구독회원 가입은 회원/결제 연동 점검 중입니다.'); });
+  signupClose?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  signupModal?.addEventListener('click', e => { if(e.target===signupModal) closeModal(); });
+  goLogin?.addEventListener('click', () => { closeModal(); loginModal?.classList.remove('hidden'); });
+
+  emailCheck?.addEventListener('click', () => {
+    const email = document.getElementById('suEmail').value.trim();
+    if (!email) { showMsg('이메일을 먼저 입력해 주세요.', false); return; }
+    const valid = email.includes('@') && email.includes('.');
+    showMsg(valid ? '사용 가능한 이메일 형식입니다.' : '올바른 이메일 형식이 아닙니다.', valid);
+  });
+
+  submitBtn?.addEventListener('click', async () => {
+    const email = document.getElementById('suEmail').value.trim();
+    const pw    = document.getElementById('suPw').value;
+    const pwc   = document.getElementById('suPwConfirm').value;
+    const name  = document.getElementById('suName').value.trim();
+    const plan  = document.getElementById('suPlan').value;
+    if (!email||!pw||!pwc||!name) { showMsg('이메일, 비밀번호, 이름을 입력해 주세요.', false); return; }
+    if (pw !== pwc) { showMsg('비밀번호가 일치하지 않습니다.', false); return; }
+    if (pw.length < 8) { showMsg('비밀번호는 8자 이상이어야 합니다.', false); return; }
+    showMsg('가입 처리 중...', true);
+    try {
+      const { data, error } = await sb.auth.signUp({
+        email, password: pw, options: { data: { name } }
+      });
+      if (error) throw error;
+      if (data.user) {
+        await sb.from('profiles').update({ plan, plan_status: 'inactive' }).eq('id', data.user.id);
+      }
+      showMsg('가입 완료! 아래 로그인 버튼을 눌러 주세요.', true);
+      setTimeout(() => { closeModal(); loginModal?.classList.remove('hidden'); }, 2000);
+    } catch(e) {
+      showMsg(e.message.includes('already registered') ? '이미 가입된 이메일입니다.' : e.message, false);
+    }
+  });
+
+  function showMsg(text, ok) {
+    msg.textContent = text;
+    msg.className = 'login-msg ' + (ok ? 'login-msg-ok' : 'login-msg-error');
+  }
+})();
+</script>
+
+
+</body>

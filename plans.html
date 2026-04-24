@@ -1,0 +1,418 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Humateck | 플랜 안내</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script src="https://accounts.google.com/gsi/client" async defer></script></head><body>
+<a href="index.html" class="go-home-link">첫 페이지로</a>
+<div class="topbar"><div class="topbar-inner" style="display:flex;align-items:center;"><a href="index.html"></a></div></div>
+
+<div class="page-wrap">
+
+<!-- ── 무료체험 안내 ── -->
+<section class="card" style="text-align:center;">
+  <div class="badge">무료체험</div>
+  <h1 style="margin-top:12px;color:#111;"><span style="color:#f5c518;font-weight:600;">먼저 무료체험하신 후 결정하세요.</span></h1>
+  <div style="font-size:18px;color:#1f2430;">신규 고객은 무료체험 후 월간 또는 연간 플랜으로 전환할 수 있습니다.</div>
+  <div class="row" style="justify-content:center;margin-top:16px;">
+    <a id="trialStartBtn" class="btn btn-primary" href="trial_choice.html">무료체험 바로가기</a>
+  </div>
+</section>
+
+<!-- ── 월간 구독 플랜 ── -->
+<section style="margin-top:28px;"><div class="section-title"><span style="color:#f5c518;font-weight:600;">월간 구독 플랜<span></div></section>
+<section class="grid-3" style="margin-top:22px;">
+  
+  <article class="plan-card plan-selectable" data-count="30" data-plan="monthly30">
+    <h2>30개국</h2>
+    <div class="plan-price-row">
+      <div class="plan-price">16,500원 <small>/ 월</small></div>
+      <button class="btn btn-light plan-start-btn"><span style="color:#f5c518;font-weight:600;">이 플랜으로 시작<span></button>
+    </div>
+    <div class="plan-desc">확장형 플랜입니다.</div>
+  </article>
+  <article class="plan-card plan-selectable" data-count="50" data-plan="monthly50">
+    <h2>50개국</h2>
+    <div class="plan-price-row">
+      <div class="plan-price">25,000원 <small>/ 월</small></div>
+      <button class="btn btn-light plan-start-btn"><span style="color:#f5c518;font-weight:600;">이 플랜으로 시작<span></button>
+    </div>
+    <div class="plan-desc">성장형 플랜입니다.</div>
+  </article>
+  <article class="plan-card plan-selectable" data-count="70" data-plan="monthly70">
+    <h2>70개국</h2>
+    <div class="plan-price-row">
+      <div class="plan-price">32,500원 <small>/ 월</small></div>
+      <button class="btn btn-light plan-start-btn"><span style="color:#f5c518;font-weight:600;">이 플랜으로 시작<span></button>
+    </div>
+    <div class="plan-desc">대표 플랜입니다.</div>
+  </article>
+</section>
+
+<!-- ── 연간 구독 플랜 ── -->
+<section id="annual" style="margin-top:28px;"><div class="section-title"><span style="color:#f5c518;font-weight:600;">연간 구독 플랜</span></div></section>
+<section class="grid-2" style="margin-top:20px;">
+  <article class="plan-card plan-selectable" data-count="70" data-plan="annual70">
+    <h2>70개국 연간 플랜</h2>
+    <div class="plan-price-row">
+      <div class="plan-price">292,500원 <small>/ 년</small></div>
+      <button class="btn btn-light plan-start-btn"><span style="color:#f5c518;font-weight:600;">이 플랜으로 시작</span></button>
+    </div>
+    <div class="plan-desc">연간 고객용 단일 플랜입니다.</div>
+  </article>
+  <article class="member-card">
+    <h3 style="color:#111;"><span style="color:#f5c518;font-weight:600;">기존 구독회원 전용</span></h3>
+    <div class="muted">활성 구독회원은 바로 주문페이지로 진입합니다.</div>
+    <div class="row" style="margin-top:14px;">
+      <button id="subscriberDirectBtn" class="btn btn-secondary">기존 구독회원 바로 주문하기</button>
+    </div>
+  </article>
+</section>
+
+<!-- ── 주문폼 (플랜 선택 시 펼쳐짐) ── -->
+
+
+</div><!-- /page-wrap -->
+
+<!-- OAuth 가이드 모달 (order.html과 동일) -->
+<div id="oauthGuideModal" class="oauth-modal hidden"><div class="oauth-modal-backdrop" id="oauthGuideBackdrop"></div><div class="oauth-modal-dialog"><div class="oauth-modal-header"><h2>중요설정 길잡이</h2><button type="button" id="closeOauthGuideBtn" class="oauth-close-btn">닫기</button></div>
+<div class="oauth-modal-body">
+  <div class="oauth-intro-box">
+    <p class="oauth-intro-text">처음에는 조금 낯설 수 있습니다.<br>하지만 이 설정은 <strong>처음 한 번만</strong> 하시면 됩니다.</p>
+    <p class="oauth-intro-text oauth-highlight">쉽게 말하면, <strong>내 유튜브 채널에 자막을 등록해도 좋다고 구글에 허락받는 연결 과정</strong>입니다.</p>
+  </div>
+  <div class="oauth-step-card"><h3>1단계. Google Cloud로 이동해 주세요</h3><p><a class="oauth-link-btn" href="https://console.cloud.google.com/auth/branding?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">Google Cloud로 이동</a></p></div>
+  <div class="oauth-step-card"><h3>2단계. Branding을 눌러 채널명/이메일 입력</h3><p><a class="oauth-link-btn" href="https://console.cloud.google.com/auth/branding?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">Branding 가기</a></p></div>
+  <div class="oauth-step-card"><h3>3단계. Target → Test users에 본인 이메일 입력</h3></div>
+  <div class="oauth-step-card"><h3>4단계. client → Create Client → Web application 선택</h3><p><a class="oauth-link-btn" href="https://console.cloud.google.com/auth/clients?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">client 가기</a></p></div>
+  <div class="oauth-step-card"><h3>5단계. YouTube API 켜기</h3><p><a class="oauth-link-btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">YouTube API 가기</a></p></div>
+  <div class="oauth-step-card">
+    <h3>6단계. 주문페이지로 돌아와 승인</h3>
+    <div class="block">
+      <div class="block-title">OAuth 클라이언트 ID 입력</div>
+      <input id="clientIdInput" type="password" placeholder="Google Cloud의 웹 애플리케이션용 OAuth 클라이언트 ID">
+      <div class="oauth-inline-actions">
+        <button type="button" class="oauth-action-btn" id="oauthStartBtn">구글 승인 시작</button>
+        <button type="button" class="oauth-action-btn" id="channelCheckBtn">채널 연결 확인</button>
+      </div>
+      <textarea id="authStatus" rows="4" readonly placeholder="승인 상태가 여기에 표시됩니다."></textarea>
+    </div>
+  </div>
+  <div class="oauth-step-card warning-card">
+    <h3>가장 중요한 주의사항</h3>
+    <p class="oauth-warning-text">여러 채널의 유튜브 자막을 등록하시려는 경우, <span style="color:#f5c518;font-weight:600;">채널당 한 개씩의 OAuth 설정이 필요합니다</span>.</p>
+  </div>
+  <div class="oauth-step-card summary-card">
+    <h3>한 줄 요약</h3>
+    <p><strong>Branding → Target → client → YouTube API → 주문페이지 승인</strong></p>
+  </div>
+</div>
+</div></div>
+
+<!-- 제출 확인 모달 -->
+<div id="submitConfirmModal" class="oauth-modal hidden"><div class="oauth-modal-backdrop" id="submitModalBackdrop"></div><div class="oauth-modal-dialog" style="max-width:560px;"><div class="oauth-modal-header"><h2>제출 전 확인</h2></div><div class="oauth-modal-body" style="padding:20px 24px;"><p style="font-size:15px;line-height:1.8;color:#1f2430;"><span style="color:#f5c518;font-weight:600;">자막등록하시려는 채널의 동영상언어가 작성하신 제목과 설명문의 언어와 일치되도록 설정하셨나요?</span><br><br>동영상 언어설정 확인 방법 :<br>유튜브 스튜디오 좌측 상단 <strong>'세부정보'</strong> 클릭 → 스튜디오 맨 우측 <strong>'자막'</strong> 클릭 → 새 창 좌측 맨위에 표시된 언어 확인 → (설정이 잘못된 경우) 페이지 좌측 중앙의 <span style="color:#f5c518;font-weight:600;">'동영상 언어 수정'</span>을 눌러 수정</p><div class="row" style="justify-content:center;gap:12px;margin-top:20px;"><button id="submitModalOkBtn" class="btn btn-primary">확인, 계속 진행</button><button id="submitModalCancelBtn" class="btn btn-light">취소</button></div></div></div></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  const SB = supabase.createClient('https://agxxpcgxgggkcdqvwmvg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFneHhwY2d4Z2dna2NkcXZ3bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MzA0MzAsImV4cCI6MjA5MTIwNjQzMH0.lmbWyY3sxfowqA_2L4PKp2_VOyxm4dBdZIW43aLxM-0');
+  Paddle.Environment.set('sandbox');
+  Paddle.Initialize({ token: 'test_85d8587080b05a5fa4ea8b99715' });
+
+  const PRICE_IDS = {
+    monthly30: 'pri_01knpgkar2z31chegy83hbex7x',
+    monthly50: 'pri_01knpgvy7658kprzjrk0a4wyhc',
+    monthly70: 'pri_01knpgxjrmjpmahypbt170vtrc',
+    annual70:  'pri_01knpgxjrmjpmahypbt170vtrc',
+  };
+
+  const PLAN_LABEL = {
+    monthly30: '30개국 / 29,900원 / 월',
+    monthly50: '50개국 / 39,900원 / 월',
+    monthly70: '70개국 / 49,900원 / 월',
+    annual70:  '70개국 / 449,000원 / 년',
+  };
+
+  let selectedCount = '70';
+  let selectedPlan  = 'monthly70';
+
+  // ── 플랜 버튼 클릭 ──
+  document.querySelectorAll('.plan-selectable').forEach(card => {
+    card.querySelector('.plan-start-btn').addEventListener('click', async () => {
+      selectedCount = card.dataset.count;
+      selectedPlan  = card.dataset.plan;
+
+      try {
+        const { data: { session } } = await SB.auth.getSession();
+        if (!session) {
+          location.href = `order.html?count=${selectedCount}&plan=${selectedPlan}&mode=chat`;
+          return;
+        }
+        const { data: profile } = await SB.from('profiles').select('plan_status').eq('id', session.user.id).single();
+        if (profile?.plan_status === 'active') {
+          location.href = `order.html?subscriber=1&count=${selectedCount}&plan=${selectedPlan}&mode=chat`;
+        } else {
+          const label = PLAN_LABEL[selectedPlan] || selectedPlan;
+          document.getElementById('payPlanBadge').textContent   = label;
+          document.getElementById('paddlePlanText').textContent = label;
+          document.getElementById('paymentModal').classList.remove('hidden');
+        }
+      } catch(e) {
+        location.href = `order.html?count=${selectedCount}&plan=${selectedPlan}&mode=chat`;
+      }
+    });
+  });
+
+  // ── 결제 모달 닫기 ──
+  document.getElementById('payModalClose').addEventListener('click', () => {
+    document.getElementById('paymentModal').classList.add('hidden');
+  });
+  document.getElementById('paymentModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('paymentModal'))
+      document.getElementById('paymentModal').classList.add('hidden');
+  });
+
+  // ── 탭 전환 ──
+  document.querySelectorAll('.pay-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pay-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pay-tab-content').forEach(c => c.classList.add('hidden'));
+      btn.classList.add('active');
+      const id = 'tab' + btn.dataset.tab.charAt(0).toUpperCase() + btn.dataset.tab.slice(1);
+      document.getElementById(id).classList.remove('hidden');
+    });
+  });
+
+  // ── 카드번호 자동 포맷 ──
+  document.getElementById('cardNum').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'').substring(0,16);
+    this.value = v.replace(/(.{4})/g,'$1 ').trim();
+    document.getElementById('cardNumDisplay').textContent =
+      (v + '················').substring(0,16).replace(/(.{4})/g,'$1 ').trim() || '•••• •••• •••• ••••';
+  });
+  document.getElementById('cardName').addEventListener('input', function() {
+    document.getElementById('cardNameDisplay').textContent = this.value.toUpperCase() || 'YOUR NAME';
+  });
+  document.getElementById('cardExp').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2,4);
+    this.value = v;
+    document.getElementById('cardExpDisplay').textContent = this.value || 'MM/YY';
+  });
+
+  // ── 신용카드 결제 ──
+  document.getElementById('cardPayBtn').addEventListener('click', () => {
+    const num  = document.getElementById('cardNum').value.replace(/\s/g,'');
+    const name = document.getElementById('cardName').value.trim();
+    const exp  = document.getElementById('cardExp').value;
+    const cvc  = document.getElementById('cardCvc').value;
+    const msg  = document.getElementById('cardPayMsg');
+    if (num.length < 16 || !name || exp.length < 5 || cvc.length < 3) {
+      msg.textContent = '모든 카드 정보를 올바르게 입력해 주세요.';
+      msg.className = 'login-msg login-msg-error'; return;
+    }
+    msg.textContent = '결제 처리 중...';
+    msg.className = 'login-msg login-msg-ok';
+    setTimeout(() => openSuccess('card'), 900);
+  });
+
+  // ── Paddle 결제 ──
+  document.getElementById('paddlePayBtn').addEventListener('click', () => {
+    const msg = document.getElementById('paddlePayMsg');
+    const priceId = PRICE_IDS[selectedPlan];
+    msg.textContent = 'Paddle 결제 창을 여는 중...';
+    msg.className = 'login-msg login-msg-ok';
+    Paddle.Checkout.open({
+      items: [{ priceId: priceId, quantity: 1 }],
+      settings: { displayMode: 'overlay', theme: 'dark', locale: 'ko' },
+      successUrl: 'https://humateck.com/plans.html?paid=1',
+      closeCallback: () => {
+        msg.textContent = '결제가 취소되었습니다.';
+        msg.className = 'login-msg login-msg-error';
+      }
+    });
+  });
+
+  // ── 결제 완료 처리 ──
+  async function openSuccess(method) {
+    try {
+      const { data: { user } } = await SB.auth.getUser();
+      if (user) {
+        const planEnd = new Date();
+        planEnd.setMonth(planEnd.getMonth() + (selectedPlan === 'annual70' ? 12 : 1));
+        await SB.from('profiles').update({
+          plan: selectedPlan, plan_status: 'active',
+          plan_start_at: new Date().toISOString(),
+          plan_end_at: planEnd.toISOString()
+        }).eq('id', user.id);
+        const AMT = {monthly30:29900,monthly50:39900,monthly70:49900,annual70:449000};
+        await SB.from('subscriptions').insert({
+          user_id: user.id, plan: selectedPlan,
+          amount: AMT[selectedPlan]||0,
+          payment_method: method||'card',
+          status: 'paid', paid_at: new Date().toISOString()
+        });
+      }
+    } catch(e) { console.warn('Supabase 저장 실패:', e.message); }
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.getElementById('successPlanText').textContent = PLAN_LABEL[selectedPlan] || selectedPlan;
+    document.getElementById('paySuccessModal').classList.remove('hidden');
+  }
+
+  // ── 결제 완료 모달 → 주문페이지 이동 ──
+  document.getElementById('goOrderBtn')?.addEventListener('click', () => {
+    document.getElementById('paySuccessModal').classList.add('hidden');
+    location.href = `order.html?subscriber=1&count=${selectedCount}&plan=${selectedPlan}&mode=chat`;
+  });
+
+  // ── 기존 구독회원 바로가기 ──
+  document.getElementById('subscriberDirectBtn').addEventListener('click', async () => {
+    const { data: { session } } = await SB.auth.getSession();
+    if (!session) {
+      alert('로그인 후 이용하실 수 있습니다.');
+      location.href = 'index.html';
+      return;
+    }
+    const { data: profile } = await SB.from('profiles').select('plan, plan_status').eq('id', session.user.id).single();
+    if (!profile || profile.plan_status !== 'active') {
+      alert('활성 구독이 없습니다. 플랜을 선택해 주세요.');
+      return;
+    }
+    const plan  = profile.plan || 'monthly70';
+    const count = plan.includes('30') ? '30' : plan.includes('50') ? '50' : '70';
+    location.href = `order.html?subscriber=1&count=${count}&plan=${plan}&mode=chat`;
+  });
+
+}); // DOMContentLoaded
+</script>
+
+<!-- ── 결제 모달 ── -->
+<div id="paymentModal" class="login-modal-overlay hidden">
+  <div class="pay-modal-box">
+    <button class="login-modal-close" id="payModalClose">✕</button>
+
+    <!-- 모달 상단: 플랜 요약 -->
+    <div class="pay-modal-top">
+      <div class="pay-plan-badge" id="payPlanBadge">70개국 / 32,500원 / 월</div>
+      <h2 class="pay-modal-title">결제 정보 입력</h2>
+    </div>
+
+    <div class="pay-modal-body">
+
+      <!-- 결제 수단 탭 -->
+      <div class="pay-tab-wrap">
+        <button class="pay-tab active" data-tab="card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          신용카드
+        </button>
+        <button class="pay-tab" data-tab="paddle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+          Paddle <span style="font-size:11px;opacity:.7;">(해외결제)</span>
+        </button>
+      </div>
+
+      <!-- 신용카드 탭 -->
+      <div id="tabCard" class="pay-tab-content">
+
+        <!-- 카드 미리보기 -->
+        <div class="card-preview">
+          <div class="card-preview-inner">
+            <div class="card-chip"></div>
+            <div class="card-number-display" id="cardNumDisplay">•••• •••• •••• ••••</div>
+            <div class="card-meta">
+              <div>
+                <div class="card-meta-label">카드 소지자</div>
+                <div class="card-meta-val" id="cardNameDisplay">YOUR NAME</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="card-meta-label">유효기간</div>
+                <div class="card-meta-val" id="cardExpDisplay">MM/YY</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 카드 입력 폼 -->
+        <div class="pay-field-group">
+          <label class="pay-label">카드 번호</label>
+          <div class="login-field">
+            <span class="login-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </span>
+            <input type="text" id="cardNum" maxlength="19" placeholder="0000 0000 0000 0000" class="login-input" autocomplete="cc-number">
+          </div>
+        </div>
+
+        <div class="pay-field-group">
+          <label class="pay-label">카드 소지자명</label>
+          <div class="login-field">
+            <span class="login-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ba3c8" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </span>
+            <input type="text" id="cardName" placeholder="홍길동" class="login-input" autocomplete="cc-name">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+          <div class="pay-field-group" style="flex:1;">
+            <label class="pay-label">유효기간</label>
+            <div class="login-field">
+              <input type="text" id="cardExp" maxlength="5" placeholder="MM/YY" class="login-input" autocomplete="cc-exp">
+            </div>
+          </div>
+          <div class="pay-field-group" style="flex:1;">
+            <label class="pay-label">CVC</label>
+            <div class="login-field">
+              <input type="password" id="cardCvc" maxlength="3" placeholder="•••" class="login-input" autocomplete="cc-csc">
+            </div>
+          </div>
+        </div>
+
+        <div id="cardPayMsg" class="login-msg hidden"></div>
+        <button class="login-submit-btn" id="cardPayBtn" style="margin-top:8px;">
+          결제하기
+        </button>
+      </div>
+
+      <!-- Paddle 탭 -->
+      <div id="tabPaddle" class="pay-tab-content hidden">
+        <div class="paddle-info-box">
+          <div class="paddle-logo-wrap">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="24" fill="#0e7cad"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="18" font-weight="800" font-family="Arial">P</text></svg>
+            <span class="paddle-logo-text">Paddle</span>
+          </div>
+          <p class="paddle-desc">해외 거주 고객님을 위한 글로벌 결제 서비스입니다.<br>Paddle이 제공하는 안전한 결제 창으로 이동합니다.</p>
+          <div class="paddle-features">
+            <div class="paddle-feat">✅ 170개국 이상 결제 지원</div>
+            <div class="paddle-feat">✅ VAT / 세금 자동 처리</div>
+            <div class="paddle-feat">✅ 주요 통화 자동 환산</div>
+            <div class="paddle-feat">✅ 구독 자동 갱신 관리</div>
+          </div>
+          <div class="paddle-plan-confirm" id="paddlePlanConfirm">
+            선택 플랜: <strong id="paddlePlanText">-</strong>
+          </div>
+        </div>
+        <div id="paddlePayMsg" class="login-msg hidden"></div>
+        <button class="login-submit-btn" id="paddlePayBtn"
+          style="background:linear-gradient(135deg,#0e7cad,#16b89e);margin-top:8px;">
+          Paddle 결제 창 열기
+        </button>
+      </div>
+
+    </div><!-- /pay-modal-body -->
+  </div>
+</div>
+
+<!-- 결제 완료 모달 -->
+<div id="paySuccessModal" class="login-modal-overlay hidden">
+  <div class="login-modal-box" style="max-width:380px;text-align:center;">
+    <div class="login-modal-top" style="padding:36px 32px 28px;">
+      <div style="font-size:52px;">🎉</div>
+      <h2 class="login-title">결제 완료!</h2>
+      <p style="color:rgba(255,255,255,.85);font-size:14px;margin:0;" id="successPlanText"></p>
+    </div>
+    <div class="login-modal-body" style="gap:14px;text-align:center;">
+      <p style="color:#1f2430;font-size:15px;line-height:1.7;">구독이 활성화되었습니다.<br>지금 바로 주문 화면에서 번역을 시작하세요!</p>
+      <button class="login-submit-btn" id="goOrderBtn">주문 화면으로 이동</button>
+    </div>
+  </div>
+</div>
+
+</body></html>

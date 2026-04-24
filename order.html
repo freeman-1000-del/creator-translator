@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<!--
+============================================================
+⚠️ 절대 금지 지침 / 다음 담당자 필독
+------------------------------------------------------------
+이 시스템은 배송 시스템이다. 번역기, 검수기, 품질판단기, 거부기가 아니다.
+사용자 명시 승인 없이는 아래 항목을 절대 추가, 복구, 변경하지 말 것.
+
+[절대 금지]
+1) 검수 로직 추가 금지
+2) 자체 판단 로직 추가 금지
+3) 자체 거부 / 반려 / 차단 / 보류 / 감점 / 제외 로직 추가 금지
+4) 형식검사 실패 문구, 번역문 점검 문구, 자체 오류판정 문구 추가 금지
+5) 불필요한 오류 표시 로직 추가 금지
+6) defaultLanguage 비교 후 1개 빼기 같은 임의 제외 로직 금지
+7) 직등록, 외부 번역문 즉시등록, 별도 검수탭 복구 금지
+8) 유튜브/구글 응답 순화, 해석, 대체 문구 출력 금지
+9) 협의되지 않은 문구, 구조, 위치, 버튼명, 흐름 변경 금지
+10) 속도를 죽이는 순차전송, 과도한 검증, 파싱 강화 금지
+11) Country Code 개수 기준 표시 원칙 임의 변경 금지
+12) "사용자를 위해 고쳤다"는 이유로 구조를 뜯어고치는 행위 금지
+
+[허용 범위]
+- 배송에 꼭 필요한 최소 연결
+- 크롬 팝업 승인 연결
+- 유튜브/구글이 실제로 돌려준 원문 오류 표시
+- 사용자가 명시 승인한 수정만 반영
+
+한 줄 원칙:
+우리는 배송만 한다. 검수하지 않는다. 자체 판단하지 않는다. 거부하지 않는다. 불필요한 오류를 만들지 않는다.
+============================================================
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Humateck 주문페이지</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+#chatTranslateBtn:not(.hidden){animation:blinkBlue 1s infinite;}
+@keyframes blinkBlue{0%,100%{background:#1a73e8;}50%{background:#4a9eff;}}
+@keyframes blinkYellow{0%,100%{opacity:1;}50%{opacity:.35;}}
+.cmd7-wrap{position:relative;}
+.cmd7-wrap textarea{padding-bottom:26px;}
+.cmd7-guide{position:absolute;left:12px;right:12px;bottom:4px;color:#ffe066;font-size:12px;font-weight:900;line-height:1.4;animation:blinkYellow 1s infinite;pointer-events:none;text-shadow:0 0 6px rgba(255,224,102,.35);}
+.progress-card{margin-top:12px;padding:12px;border:1px solid #d7c27a;border-radius:10px;background:#fffaf0;}
+.progress-track{height:12px;background:#e9edf4;border-radius:999px;overflow:hidden;margin-bottom:10px;}
+.progress-bar{height:100%;width:0%;background:#1a73e8;transition:width .25s ease;}
+.progress-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;color:#333;}
+.progress-meta{margin-top:6px;font-size:12px;color:#555;}
+</style>
+</head>
+<body>
+<a href="index.html" class="go-home-link">첫 페이지로</a>
+<a class="go-home-link" href="plans.html" style="top:52px;">전체플랜 확인</a>
+
+<div class="page-wrap">
+  <div class="app-shell">
+    <aside class="panel left">
+      <h2>주문 입력</h2>
+      <div class="block">
+        <div class="block-title">현재 구독 플랜</div>
+        <div class="current-plan-box">
+          <div>
+            <div id="currentPlanName" class="plan-name">30개국 / 무료/ 월</div>
+            <div id="contractDateText" class="help-text">계약일: 2026-04-05</div>
+          </div>
+          </div>
+      </div>
+
+      <label>유튜브 영상 주소</label>
+      <input id="videoUrl" type="text" placeholder="https://www.youtube.com/watch?v=...">
+
+      <label>원문 제목</label>
+      <textarea id="titleInput" rows="3" placeholder="제목을 입력해 주세요."></textarea>
+
+      <label>원문 설명문</label>
+      <textarea id="descInput" rows="10" placeholder="설명문을 입력해 주세요."></textarea>
+
+      <div class="row">
+        <button id="submitBtn" class="primary">제출하기</button>
+        <button id="resetBtn" class="light">초기화</button>
+      </div>
+
+      <div class="notice-box">
+        <div class="notice-strong">유튜브 등록관련 공지사항</div>
+        <div class="faq-item">
+          <p class="help-text">당사는 고객님의 번역 승인본에 대해 <span style="color:#f5c518;font-weight:600;">어떠한 검수나 차단도 하지 않으며, 승인된 내용 그대로 발송</span>합니다.</p>
+          <p class="help-text">모든 번역문은 유튜브 채널에 <span style="color:#f5c518;font-weight:600;">즉시 등록</span>되며, 접수측이 실제로 거부한 언어는 보류 언어로 분리 표시됩니다.</p>
+        </div>
+      </div>
+
+      <div id="youtubeFaqBox" class="notice-box youtube-faq-box hidden">
+        <div class="notice-strong">유튜브등록 FAQ</div>
+        <div class="faq-item">
+          <div class="faq-q">1. <span style="color:#f5c518;font-weight:600;">문)</span> 번역 등록 후 스튜디오에서 자막을 열어보니 번역은 되었는데, 설명문칸이 비어 있습니다.</div>
+          <div class="muted">답) 유튜브 자막은, 영어가 아닌 다국어 원문으로 번역하여 다국어로 등록시 기본 언어설정이 영어(미국어)로 자동전환됩니다. 따라서 고객님의 모국어 역시 외국어로 번역 처리되어 설명칸이 공백으로 남게 되며, 이는 유튜브의 다국어 자막 표시시스템상 불가피한 일입니다. 필요시 고객님이 작성한 원문을 공백에 다시 복붙하셔서 사용하시기 바랍니다.</div>
+        </div>
+         <div class="faq-item">
+        <div id="faqMoreBox" class="hidden">
+          <div class="faq-item">
+            <div class="faq-q">2. <span style="color:#f5c518;font-weight:600;">문)</span> 유튜브 자막 등록하기를 누르니 할당량 초과 메시지가 뜹니다.</div>
+            <div class="muted">답) 유튜브 자막등록 일일 API 무료할당량이 초과된 경우입니다. 다음날 할당량이 다시 충전될 때까지 기다렸다가 다시 시도하시기 바랍니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">3. <span style="color:#f5c518;font-weight:600;">문)</span> '유튜브 영상 주소에서 videoId를 찾지 못했습니다.'라는 메시지가 뜹니다.</div>
+            <div class="muted">답) 유튜브 주소를 잘못 입력하신 경우입니다. 반드시 유튜브 실제동영상(스튜디오 ×)의 주소를 그대로 복사하여 붙여 넣어 주시기 바랍니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">4. <span style="color:#f5c518;font-weight:600;">문)</span> 구글 OAuth 설정이 무엇인가요? 사용시마다 설정해야 하나요?</div>
+            <div class="muted">답) 내 유튜브 채널에 자막을 등록해도 좋다고 구글에 허락받는 연결 과정입니다. 처음 1회만 설정하시면 됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">5. <span style="color:#f5c518;font-weight:600;">문)</span> 여러 채널을 운영 중입니다. OAuth 설정을 단 한번만 받아도 되나요?</div>
+            <div class="muted">답) 구글의 정책상, 보유하신 채널당 한 번씩의 설정이 필요합니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">6. <span style="color:#f5c518;font-weight:600;">문)</span> YouTube Data API 할당량이란 무엇인가요?</div>
+            <div class="muted">답) 유튜브는 자막테이터 사용에 대해 채널당 하루 제한량을 설정하는데, 이를 API 할당량이라고 합니다. 기본적으로 일일 10,000단위가 주어지며, 태평양 표준시(PT) 자정에 재설정됩니다.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <button onclick="var b=document.getElementById('faqMoreBox');b.classList.toggle('hidden');this.textContent=b.classList.contains('hidden')?'자세히 알아보기 ▼':'접기 ▲'" style="background:none;border:1px solid #c8a84b;color:#c8a84b;padding:4px 14px;border-radius:6px;font-size:12px;cursor:pointer;">자세히 알아보기 ▼</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="panel center">
+      <div class="notice-box trial-mode-box hidden" id="trialModeInfoBox">
+        <div class="notice-strong">무료체험 안내</div>
+        <p class="help-text" id="trialModeInfoText"></p>
+        <div class="row trial-action-box" id="trialModeActionRow"></div>
+      </div>
+
+      <div class="center-topbar">
+        <h1 id="centerTitle">제미나이 번역의뢰문</h1>
+        <button type="button" id="openOauthGuideBtn" class="primary blink-soft">중요설정 길잡이</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;">
+        <button id="copyPromptBtn" class="primary hidden">제미나이 번역의뢰문 복사</button>
+        <button id="chatTranslateBtn" class="hidden" style="background:#1a73e8;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;animation:none;">챗번역하러 가기</button>
+        <div id="copyWarning" class="copy-warning hidden">※ 먼저 제미나이 번역의뢰문 복사 버튼을 눌러 주세요.</div>
+      </div>
+
+      <textarea id="promptOutput" rows="18" placeholder="제출하기를 누르면 현재 구독 플랜에 맞는 제미나이 번역의뢰문이 생성됩니다."></textarea>
+
+      <div id="commandBlock" class="block hidden">
+        <div class="block-title"><span style="color:#f5c518;font-weight:600;">고객 복사 붙여넣기 명령 순서</span></div>
+        <p class="help-text">제미나이 대화창에 아래 순서대로 붙여넣어 주세요.</p>
+
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 1</strong><button class="mini-copy" data-copy="cmd1">복사</button></div><textarea id="cmd1" rows="3" readonly></textarea></div>
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 2</strong><button class="mini-copy" data-copy="cmd2">복사</button></div><textarea id="cmd2" rows="3" readonly></textarea></div>
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 3</strong><button class="mini-copy" data-copy="cmd3">복사</button></div><textarea id="cmd3" rows="3" readonly></textarea></div>
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 4</strong><button class="mini-copy" data-copy="cmd4">복사</button></div><textarea id="cmd4" rows="3" readonly></textarea></div>
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 5</strong><button class="mini-copy" data-copy="cmd5">복사</button></div><textarea id="cmd5" rows="3" readonly></textarea></div>
+        <div class="cmd-item"><div class="cmd-head"><strong>명령 6</strong><button class="mini-copy" data-copy="cmd6">복사</button></div><textarea id="cmd6" rows="3" readonly></textarea></div>
+
+        <div class="cmd-item">
+          <div class="cmd-head"><strong>명령 7</strong><button class="mini-copy" data-copy="cmd7">복사</button></div>
+          <div class="cmd7-wrap">
+            <textarea id="cmd7" rows="3" readonly></textarea>
+            <div class="cmd7-guide">⚠️ 반드시 7번 명령('아래로 이동해 줘.') 위 마지막 번역문 끝의 <span style="background:#2a4f7c;padding:1px 6px;border-radius:4px;font-size:12px;font-weight:900;">⧉</span>(대답 복사) 버튼을 누르신 후 아래에 붙여넣기 하세요!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title"><span style="color:#f5c518;font-weight:600;">최종본 붙여넣기</span></div>
+        <textarea id="finalOutput" rows="16" placeholder="제미나이 최종 번역본을 이곳에 붙여 넣으세요."></textarea>
+      </div>
+
+      <div class="block">
+        <div class="block-title"><span style="color:#f5c518;font-weight:600;">유튜브 등록</span></div>
+        <div class="row" id="deliveryButtonRow">
+          <button id="copyFinalBtn" class="light">최종본 복사</button>
+          <button id="sendOrderBtn" class="primary">유튜브 자막 등록하기</button>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+          <div class="progress-row">
+            <div id="progressPercent">0%</div>
+            <div id="progressText">0 / 0</div>
+          </div>
+          <div class="progress-meta" id="elapsedTime">등록소요시간: 0초</div>
+        </div>
+
+        <textarea id="deliveryLog" rows="12" readonly placeholder="실등록 결과가 여기에 표시됩니다."></textarea>
+      </div>
+    </main>
+
+    <aside class="panel right">
+  <h2>상태 / 안내</h2>
+  <div class="notice-box quick-guide-box">
+    <div class="notice-strong"><span style="color:#f5c518;font-weight:600;"><h3>빠른 안내</span></h3>
+    <div class="faq-item"></div>
+    <p class="help-text quick-guide-text"><span style="color:#ffffff;font-weight:600;"><span style="color:#f5c518;font-weight:600;">1)</span> 본 서비스를 이용하기 위한 <span style="color:#f5c518;font-weight:600;">필수 첫단계</span>는 <span style="color:#f5c518;font-weight:600;">구글 OAuth 승인 설정</span>입니다. 
+    <p class="help-text quick-guide-text"><span style="color:#ffffff;font-weight:600;">중앙 상단의 <span style="color:#f5c518;font-weight:600;">'중요설정 길잡이'</span>의 상세 안내에 따라 설정을 진행해 주세요.</p>
+    <p class="help-text quick-guide-text"><span style="color:#ffffff;font-weight:600;"><span style="color:#f5c518;font-weight:600;">2)</span> 여러 채널의 유튜브 자막을 등록하시려는 경우, <span style="color:#f5c518;font-weight:600;">채널당 한 개씩의 OAuth 설정이 필요</span>합니다.<br>별도의 설정 비용은 부과되지 않습니다.</p>
+    <p class="help-text quick-guide-text"><span style="color:#ffffff;font-weight:600;"><span style="color:#f5c518;font-weight:600;">3)</span> Google OAuth 인증은 홈페이지에서 직접 처리하지 않고, <span style="color:#f5c518;font-weight:600;">크롬 확장판 팝업</span>에서 직접 진행합니다.</p>
+        <div class="block">
+          <div class="block-title">Google OAuth 인증</div>
+          <input id="clientIdSideInput" type="hidden" value="">
+          <div class="row" style="margin-top:10px;">
+            <button type="button" id="oauthStartBtnSide" class="btn btn-primary">크롬 팝업으로 Google 인증하기</button>
+            <button type="button" id="channelCheckBtnSide" class="btn btn-light">인증 상태 확인</button>
+          </div>
+          <textarea id="authStatusSide" rows="3" readonly placeholder="인증 상태가 여기에 표시됩니다." style="margin-top:8px;">크롬 팝업 인증 전입니다.\n'크롬 팝업으로 Google 인증하기' 버튼을 눌러 주세요.</textarea>
+        </div>
+      </div>
+
+      <div id="holdGuideNoticeBox" class="notice-box hidden">
+        <div class="notice-strong">보류언어 수정 안내</div>
+        <button id="holdGuideBtn" class="primary blink-soft" type="button">보류언어 처리방법</button>
+        <div id="holdGuideBox" class="expand-box">
+          <p class="help-text">접수측에 의해 오류로 반환된 언어는 아래 절차에 따라 처리해 주시기 바랍니다.</p>
+          <ol class="help-text" style="margin-left:18px;">
+            <li>'보류사유복사' 버튼을 눌러 내용을 복사해 주세요.</li>
+            <li>번역을 담당한 해당 제미나이 대화창에 그대로 붙여넣어 주세요.</li>
+            <li>제미나이의 답변 내용을 확인하시고, 이상 유무를 검수해 주세요.</li>
+            <li>이상이 없을 경우 수정된 내용을 복사해 주세요.</li>
+            <li>'보류언어 재배송' 버튼을 눌러 붙여넣어 주세요.</li>
+            <li>최종 확인 후 배송을 진행해 주세요.</li>
+          </ol>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="oauthGuideModal" class="oauth-modal hidden">
+  <div class="oauth-modal-backdrop" id="oauthGuideBackdrop"></div>
+  <div class="oauth-modal-dialog">
+    <div class="oauth-modal-header">
+      <h2>중요설정 길잡이 <span style="color:#f5c518;font-weight:600;">(처음 사용자를 위한 구글 OAuth 승인방법)</span></h2>
+      <button type="button" id="closeOauthGuideBtn" class="oauth-close-btn">닫기</button>
+    </div>
+    <div class="oauth-modal-body">
+      <div class="oauth-intro-box">
+        <p class="oauth-intro-text">처음에는 조금 낯설 수 있습니다.<br>하지만 이 설정은 <strong>처음 한 번만</strong> 하시면 됩니다.</p>
+        <p class="oauth-intro-text oauth-highlight">쉽게 말하면, <strong>내 유튜브 채널에 자막을 등록해도 좋다고 구글에 허락받는 연결 과정</strong>입니다.</p>
+        <p class="oauth-intro-text">너무 어렵게 생각하지 마세요. 아래 순서대로 천천히 따라 하시면 됩니다.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>1단계. Google Cloud로 이동해 주세요</h3>
+        <p>먼저 아래 주소로 들어가 주세요.</p>
+        <p><a class="oauth-link-btn" href="https://console.cloud.google.com/auth/branding?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">Google Cloud로 이동</a></p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>2단계. 왼쪽에서 <span style="color:#f5c518;font-weight:600;">Branding</span>을 눌러 주세요</h3>
+        <p><strong>App name</strong>에 자막을 등록하려는 채널명을 적어 주세요.</p>
+        <p><strong>User support email</strong>과 <strong>Developer contact information</strong>에는 해당 채널 대표 이메일을 적어 주세요.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>3단계. 왼쪽에서 <span style="color:#f5c518;font-weight:600;">Target</span>을 눌러 주세요</h3>
+        <p><strong>Posting status</strong>, <strong>User type</strong>, <strong>Test users</strong>가 보이면 정상입니다.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>4단계. <span style="color:#f5c518;font-weight:600;">Test users</span>에 본인 구글 이메일을 넣어 주세요</h3>
+        <p>실제로 승인 테스트를 진행할 본인 이메일 주소 1개를 넣으면 됩니다.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>5단계. 왼쪽에서 <span style="color:#f5c518;font-weight:600;">client</span>를 눌러 주세요</h3>
+        <p><a class="oauth-link-btn" href="https://console.cloud.google.com/auth/clients?project=fourth-cedar-489307-b1" target="_blank" rel="noopener noreferrer">client 가기</a></p>
+        <p><strong>Create Client</strong> → <strong>Web application</strong>을 선택해 주세요.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>6단계. 만들어진 OAuth Client ID를 복사해 주세요</h3>
+        <p>이 값이 바로 주문페이지에 붙여넣을 번호입니다.</p>
+      </div>
+
+      <div class="oauth-step-card">
+        <h3>8단계. 주문페이지에서 크롬 팝업으로 인증해 주세요</h3>
+        <p>구글의 공식 인증환경에서 직접 인증을 진행한 뒤 배송 절차를 이어서 진행해 주세요.</p>
+        <input id="clientIdInput" type="hidden" value="">
+        <div class="oauth-inline-actions">
+          <button type="button" class="oauth-action-btn" id="oauthStartBtn">크롬 팝업으로 Google 인증하기</button>
+          <button type="button" class="oauth-action-btn" id="channelCheckBtn">인증 상태 확인</button>
+        </div>
+
+        <textarea id="authStatus" rows="4" readonly placeholder="인증 상태가 여기에 표시됩니다.">크롬 팝업 인증 전입니다.\n'크롬 팝업으로 Google 인증하기' 버튼을 눌러 주세요.</textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="oauthPopupGuideModal" class="oauth-modal hidden">
+  <div class="oauth-modal-backdrop" id="oauthPopupGuideBackdrop"></div>
+  <div class="oauth-modal-dialog" style="max-width:560px;">
+    <div class="oauth-modal-body" style="padding:20px 24px;">
+      <p style="font-size:22px;font-weight:800;color:#f5c518;margin-bottom:12px;">크롬 팝업 연동 안내</p>
+      <p style="font-size:14px;line-height:1.8;color:#1f2430;">Google OAuth 인증은 크롬 확장판 팝업에서 직접 진행됩니다.<br><br>공식 인증환경에서 직접 인증을 완료한 뒤 배송 절차를 이어서 진행해 주십시오.</p>
+      <div class="row" style="justify-content:center;gap:12px;margin-top:20px;">
+        <button id="oauthPopupGuideOkBtn" class="btn btn-primary">확인</button>
+        <button id="oauthPopupGuideCloseBtn" class="btn btn-light">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="submitConfirmModal" class="oauth-modal hidden">
+  <div class="oauth-modal-backdrop" id="submitModalBackdrop"></div>
+  <div class="oauth-modal-dialog" style="max-width:560px;">
+    <div class="oauth-modal-body" style="padding:20px 24px;">
+      <p style="font-size:22px;font-weight:800;color:#f5c518;margin-bottom:12px;">⚠️ <span style="color:#ff4444;">필수!</span> 제출 전 확인사항</p>
+      <p style="font-size:13px;line-height:1.8;color:#1f2430;">자막등록하시려는 채널의 동영상언어가 <span style="color:#c00;font-weight:700;">영문(미국어)</span>이 아니신가요?</p>
+      <p style="font-size:13px;line-height:1.8;color:#1f2430;margin-top:10px;">고객님의 모국어로 번역물을 생성하여 등록 시, <span style="color:#c00;font-weight:700;">다국어 번역은 모두 입력</span>되지만, 원문 <span style="color:#c00;font-weight:700;">설명문 칸이 공백</span>으로 남게 되며 <span style="color:#c00;font-weight:700;">자막기본설정은 영문(미국)으로 박제</span>됩니다.</p>
+      <p style="font-size:13px;line-height:1.8;color:#1f2430;margin-top:10px;">하지만 이는 <span style="color:#c00;font-weight:700;">유튜브 다국어자막 등록시스템상 불가피한 현상</span>이며 번역품질에 영향을 미치는건 아닙니다. 필요시 모국어 채널에 제미나이의 번역 대신 <span style="color:#c00;font-weight:700;">고객님이 직접 작성하신 원문 설명문</span>을 넣어서 쓰실 수 있습니다.</p>
+      <div class="row" style="justify-content:center;gap:12px;margin-top:20px;">
+        <button id="submitModalOkBtn" class="btn btn-primary">확인, 계속 진행</button>
+        <button id="submitModalCancelBtn" class="btn btn-light">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COUNTRY_GUIDE_LIST = [["ko","South Korea"],["en-US","United States"],["en-GB","United Kingdom"],["es","Spain"],["fr","France"],["de","Germany"],["pt","Portugal"],["it","Italy"],["ja","Japan"],["zh-CN","China (Simplified)"],["zh-TW","China (Traditional)"],["ar","Saudi Arabia"],["hi","India"],["ru","Russia"],["nl","Netherlands"],["pl","Poland"],["tr","Turkey"],["sv","Sweden"],["da","Denmark"],["fi","Finland"],["cs","Czech Republic"],["ro","Romania"],["hu","Hungary"],["el","Greece"],["th","Thailand"],["id","Indonesia"],["ms","Malaysia"],["vi","Vietnam"],["uk","Ukraine"],["fa","Iran"],["af","South Africa"],["sq","Albania"],["am","Ethiopia"],["hy","Armenia"],["az","Azerbaijan"],["be","Belarus"],["bn","Bangladesh"],["bs","Bosnia and Herzegovina"],["bg","Bulgaria"],["hr","Croatia"],["et","Estonia"],["ka","Georgia"],["ht","Haiti"],["is","Iceland"],["ga","Ireland"],["kn","India (Kannada)"],["kk","Kazakhstan"],["km","Cambodia"],["rw","Rwanda"],["lv","Latvia"],["lt","Lithuania"],["mk","North Macedonia"],["ml","India (Malayalam)"],["mt","Malta"],["mr","India (Marathi)"],["mn","Mongolia"],["my","Myanmar"],["ne","Nepal"],["pa","India (Punjabi)"],["sr","Serbia"],["sk","Slovakia"],["sw","Kenya"],["tl","Philippines"],["ta","India (Tamil)"],["te","India (Telugu)"],["yo","Nigeria"],["zu","South Africa (Zulu)"],["ca","Catalonia"],["gl","Galicia"],["eu","Basque Country"]];
+const COUNTRY_GUIDE_LIST_30 = COUNTRY_GUIDE_LIST.slice(0, 30);
+const COUNTRY_GUIDE_LIST_50 = COUNTRY_GUIDE_LIST.slice(0, 50);
+const CUSTOMER_TOTAL_COUNT = 70;
+const YT_SCOPE = "https://www.googleapis.com/auth/youtube";
+const DEFAULT_VIDEO_LANGUAGE = "";
+const CMD1 = "타언어 혼입, 문맥의 부자연스러움, 기타 문제를 자동으로 꼼꼼이 검수해 줘.";
+const CMD2 = "Number: 와 Country Name: 줄만 삭제해 줘.\n중요: 나머지 형식은 지금처럼 그대로 유지할 것(Country Code:, Title:, Description:)";
+const CMD3 = "타언어 혼입, 문맥의 부자연스러움, 기타 문제를 한 번 더 검수해 줘.\n형식은 그대로 유지해 줘.";
+const CMD4 = "국가명이 삭제되었는지 다시 검수하고, 타언어 혼입, 문맥의 부자연스러움, 기타 문제를 다시 한 번 꼼꼼이 검수해 줘.";
+const CMD5 = "number를 붙여 전체 번역 코드수를 집계해 봐.";
+const CMD6 = "전체 숫자가 맞으면 number를 모두 지우고, 타언어 혼입, 문맥의 부자연스러움, 기타 문제를 마지막으로 꼼꼼히 검수해 줘.";
+const CMD7 = "아래로 이동해 줘.";
+const PROMPT_TEMPLATE = `제미나이 의뢰문\n\n안녕 제미나이!\n아래 제목과 설명문을 {activeCount}개 국가 세트에 맞춰 자연스럽게 현지화 번역해 줘.\n처음부터 끝까지 중간에 끊지 말고 계속 번역해 줘.\n\n[원문]\nTitle: {title}\n\nDescription:\n{desc}\n\n[출력 형식]\nNumber: 순번\nCountry Code: 언어코드\nCountry Name: 영어 국가명\nTitle: 번역된 제목\nDescription:\n번역된 설명문\n\n[핵심 원칙]\n1. 처음부터 끝까지 절대 끊지 말고 계속 번역해 줘.\n2. 작업내용 설명, 머리말, 맺음말, 해설문은 넣지 말아 줘.\n3. 아래 대응표의 Country Code와 Country Name을 그대로 사용할 것\n4. 블록 순서는 절대 바꾸지 말 것\n5. 각 블록은 반드시 Country Code로 시작할 것\n6. Description의 문단 구조와 줄바꿈은 원문 흐름을 유지할 것\n7. 제목, 설명문 외의 군소리, 키워드 줄, 해시태그, 코드블록, HTML은 넣지 말 것\n8. 작업이 끝났으면 아래로 이동해 줘.\n\n[Country Code / Country Name 대응표]\n{countryGuide}\n\n[반드시 사용할 언어코드 및 순서]\n{codeList}\n`;
+const SUBSCRIBER_PROFILE_DEMO = {
+  monthly70: {label:"70개국 / 32,500원 / 월", status:"active", renewDate:"2026-05-07"},
+  monthly50: {label:"50개국 / 25,000원 / 월", status:"active", renewDate:"2026-05-07"},
+  monthly30: {label:"30개국 / 16,500원 / 월", status:"active", renewDate:"2026-05-07"},
+  cancelled70: {label:"70개국 / 32,500원 / 월", status:"cancelled", endDate:"2026-05-07"}
+};
+
+const $ = (id) => document.getElementById(id);
+let ACTIVE_COUNTRY_GUIDE_LIST = COUNTRY_GUIDE_LIST;
+let ACTIVE_TOTAL_COUNT = CUSTOMER_TOTAL_COUNT;
+let IS_TRIAL_MODE = false;
+let IS_MOCK_MODE = false;
+let copied = false;
+let tokenClient = null;
+let accessToken = null;
+
+function configureModeFromQuery() {
+  const params = new URLSearchParams(location.search);
+  IS_TRIAL_MODE = params.get("trial") === "1";
+  IS_MOCK_MODE = params.get("mock") === "1";
+  const count = params.get("count");
+  if (IS_TRIAL_MODE || count === "30") {
+    ACTIVE_COUNTRY_GUIDE_LIST = COUNTRY_GUIDE_LIST_30;
+    ACTIVE_TOTAL_COUNT = 30;
+  } else if (count === "50") {
+    ACTIVE_COUNTRY_GUIDE_LIST = COUNTRY_GUIDE_LIST_50;
+    ACTIVE_TOTAL_COUNT = 50;
+  } else {
+    ACTIVE_COUNTRY_GUIDE_LIST = COUNTRY_GUIDE_LIST;
+    ACTIVE_TOTAL_COUNT = CUSTOMER_TOTAL_COUNT;
+  }
+}
+
+function activeCountryGuide() {
+  return ACTIVE_COUNTRY_GUIDE_LIST.map(([code, name], i) => `${i + 1}. ${code} | ${name}`).join("\n");
+}
+
+function activeCodeList() {
+  return ACTIVE_COUNTRY_GUIDE_LIST.map(([code]) => `"${code}"`).join(", ");
+}
+
+function buildPrompt() {
+  return PROMPT_TEMPLATE
+    .replaceAll("{title}", ($("titleInput")?.value || "").trim() || "[제목을 입력해 주세요]")
+    .replaceAll("{desc}", ($("descInput")?.value || "").trim() || "[설명문을 입력해 주세요]")
+    .replaceAll("{countryGuide}", activeCountryGuide())
+    .replaceAll("{activeCount}", String(ACTIVE_TOTAL_COUNT))
+    .replaceAll("{codeList}", activeCodeList());
+}
+
+function log(msg) {
+  const box = $("deliveryLog");
+  if (!box) return;
+  const now = new Date().toLocaleTimeString("ko-KR");
+  box.value += `[${now}] ${msg}\n`;
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProgress(percent, text) {
+  if ($("progressBar")) $("progressBar").style.width = `${percent}%`;
+  if ($("progressPercent")) $("progressPercent").textContent = `${percent}%`;
+  if ($("progressText")) $("progressText").textContent = text;
+}
+
+function countCountryCodeTokens(text) {
+  return Math.max(0, ((text || "").split("Country Code:").length - 1));
+}
+
+function parseFinalText(text) {
+  const normalized = (text || "").replace(/\r/g, "");
+  const blocks = normalized.split("Country Code:").slice(1);
+  const items = [];
+  for (const rawBlock of blocks) {
+    const block = rawBlock.replace(/^\s+/, "");
+    const firstBreak = block.indexOf("\n");
+    const code = (firstBreak >= 0 ? block.slice(0, firstBreak) : block).trim();
+    const rest = firstBreak >= 0 ? block.slice(firstBreak + 1) : "";
+    const titleMatch = rest.match(/(?:^|\n)Title:\s*(.*)/);
+    const descIndex = rest.indexOf("Description:");
+    const title = titleMatch ? titleMatch[1].trim() : "";
+    const description = descIndex >= 0 ? rest.slice(descIndex + "Description:".length).replace(/^\n/, "").trimEnd() : "";
+    if (code) {
+      items.push({ code, title, description });
+    }
+  }
+  return items;
+}
+
+function buildLocalizationMap(items) {
+  const map = {};
+  items.forEach((item) => {
+    if (!item.code) return;
+    map[item.code] = {
+      title: item.title || "",
+      description: item.description || ""
+    };
+  });
+  return map;
+}
+
+function extractVideoId(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "") || null;
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    const parts = u.pathname.split("/");
+    const idx = parts.indexOf("shorts");
+    if (idx >= 0 && parts[idx + 1]) return parts[idx + 1];
+  } catch (e) {}
+  return null;
+}
+
+function initTokenClient() {
+  const clientId = (($("clientIdSideInput")?.value || $("clientIdInput")?.value) || "").trim();
+  if (!clientId) {
+    alert("아직 구글 승인을 받지 않으셨습니다. (최초 1회) 구글 승인 받으러 가기 버튼을 눌러 주세요.");
+    $("openOauthGuideBtn")?.click();
+    return false;
+  }
+  if ($("clientIdInput") && !$("clientIdInput").value) $("clientIdInput").value = clientId;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: YT_SCOPE,
+    callback: (resp) => {
+      if (resp && resp.access_token) {
+        accessToken = resp.access_token;
+        if ($("authStatus")) $("authStatus").value = "구글 승인 완료\nAccess Token 수신 완료";
+        if ($("authStatusSide")) $("authStatusSide").value = "구글 승인 완료\nAccess Token 수신 완료";
+      } else {
+        if ($("authStatus")) $("authStatus").value = "구글 승인 실패 또는 취소";
+        if ($("authStatusSide")) $("authStatusSide").value = "구글 승인 실패 또는 취소";
+      }
+    }
+  });
+  return true;
+}
+
+async function fetchVideo(videoId) {
+  const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations&id=${encodeURIComponent(videoId)}`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || "videos.list 실패");
+  const item = data.items && data.items[0];
+  if (!item) throw new Error("대상 영상을 찾지 못했습니다.");
+  return item;
+}
+
+async function updateVideoLocalizations(videoId, existingVideo, mergedLocalizations) {
+  const existingSnippet = existingVideo.snippet || {};
+  if (!existingSnippet.title) throw new Error("기존 영상의 snippet.title을 찾지 못했습니다.");
+  if (!existingSnippet.categoryId) throw new Error("기존 영상의 snippet.categoryId를 찾지 못했습니다.");
+  const body = {
+    id: videoId,
+    snippet: {
+      title: existingSnippet.title,
+      categoryId: existingSnippet.categoryId,
+      defaultLanguage: existingSnippet.defaultLanguage || DEFAULT_VIDEO_LANGUAGE
+    },
+    localizations: mergedLocalizations
+  };
+  const res = await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet,localizations", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || "videos.update 실패");
+  return data;
+}
+
+async function sendLocalizations() {
+  $("deliveryLog").value = "";
+  if (!accessToken) {
+    alert("먼저 구글 승인을 진행해 주세요.");
+    return;
+  }
+
+  const videoUrl = ($("videoUrl")?.value || "").trim();
+  const videoId = extractVideoId(videoUrl);
+  if (!videoId) {
+    alert("유튜브 영상 주소에서 videoId를 찾지 못했습니다.");
+    return;
+  }
+
+  const finalText = ($("finalOutput")?.value || "").trim();
+  if (!finalText) {
+    alert("제미나이 최종본을 붙여넣어 주세요.");
+    return;
+  }
+
+  const items = parseFinalText(finalText);
+  const requestedCount = Math.max(countCountryCodeTokens(finalText), items.length);
+  const newMap = buildLocalizationMap(items);
+
+  log(`대상 videoId: ${videoId}`);
+  log(`입력 언어 수: ${requestedCount}개`);
+  log(`발송 언어 수: ${requestedCount}개`);
+  setProgress(10, `0 / ${requestedCount}`);
+
+  const startTime = Date.now();
+  const elapsedTimer = setInterval(() => {
+    const sec = Math.floor((Date.now() - startTime) / 1000);
+    if ($("elapsedTime")) $("elapsedTime").textContent = `등록소요시간: ${sec}초`;
+  }, 200);
+
+  try {
+    const existing = await fetchVideo(videoId);
+    setProgress(45, `발송 준비 / ${requestedCount}`);
+    const merged = Object.assign({}, existing.localizations || {}, newMap);
+    await updateVideoLocalizations(videoId, existing, merged);
+    setProgress(100, `${requestedCount} / ${requestedCount}`);
+    log("videos.update 전송 완료");
+    log(`등록 결과: ${requestedCount}개`);
+    log("실등록 성공");
+  } catch (e) {
+    log(`실등록 실패: ${e.message}`);
+    alert(`실등록 실패: ${e.message}`);
+  } finally {
+    clearInterval(elapsedTimer);
+    const sec = Math.floor((Date.now() - startTime) / 1000);
+    if ($("elapsedTime")) $("elapsedTime").textContent = `등록소요시간: ${sec}초`;
+  }
+}
+
+function showSubmitModal(onConfirm) {
+  const modal = $("submitConfirmModal");
+  if (!modal) {
+    onConfirm();
+    return;
+  }
+  modal.classList.remove("hidden");
+  $("submitModalOkBtn").onclick = () => {
+    modal.classList.add("hidden");
+    onConfirm();
+  };
+  $("submitModalCancelBtn").onclick = () => modal.classList.add("hidden");
+  $("submitModalBackdrop").onclick = () => modal.classList.add("hidden");
+}
+
+function setStatuses(text, type) {
+  [$("authStatusSide"), $("authStatus")].forEach((el) => {
+    if (!el) return;
+    el.value = text;
+    el.classList.remove("ok", "bad");
+    if (type) el.classList.add(type);
+  });
+}
+
+function openChromeOAuthPopup() {
+  const base = "chrome-extension://kpjbakonoghmklnnnomgbendjcjiehml";
+  const popupUrl = `${base}/oauth_popup.html?origin=${encodeURIComponent(window.location.origin)}`;
+  const width = 500;
+  const height = 720;
+  const left = Math.max(0, (window.screen.width - width) / 2);
+  const top = Math.max(0, (window.screen.height - height) / 2);
+  const popup = window.open(popupUrl, "humateck_google_oauth", `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+  if (!popup) {
+    setStatuses("크롬 확장판 팝업을 열 수 없습니다. 확장판 설치 상태 또는 팝업 차단 설정을 확인해 주세요.", "bad");
+  } else {
+    setStatuses("크롬 확장판 팝업을 열었습니다. 공식 인증환경에서 직접 인증을 진행해 주세요.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  configureModeFromQuery();
+
+  $("cmd1") && ($("cmd1").value = CMD1);
+  $("cmd2") && ($("cmd2").value = CMD2);
+  $("cmd3") && ($("cmd3").value = CMD3);
+  $("cmd4") && ($("cmd4").value = CMD4);
+  $("cmd5") && ($("cmd5").value = CMD5);
+  $("cmd6") && ($("cmd6").value = CMD6);
+  $("cmd7") && ($("cmd7").value = CMD7);
+
+  setProgress(0, `0 / ${ACTIVE_TOTAL_COUNT}`);
+
+  const params = new URLSearchParams(location.search);
+  const subscriber = params.get("subscriber") === "1";
+  const plan = params.get("plan") || "monthly70";
+  const PLAN_LABEL_MAP = {
+    monthly30: "30개국 / 16,500원 / 월",
+    monthly50: "50개국 / 25,000원 / 월",
+    monthly70: "70개국 / 32,500원 / 월",
+    annual70: "70개국 / 292,500원 / 년",
+  };
+
+  if ($("currentPlanName")) {
+    if (subscriber) {
+      const prof = SUBSCRIBER_PROFILE_DEMO[plan] || SUBSCRIBER_PROFILE_DEMO.monthly70;
+      $("currentPlanName").textContent = prof.label;
+      if ($("contractDateText")) {
+        $("contractDateText").textContent = prof.status === "cancelled" ? `구독취소 예정 · 종료일: ${prof.endDate}` : `자동연장일: ${prof.renewDate}`;
+      }
+    } else if (!IS_TRIAL_MODE && plan && PLAN_LABEL_MAP[plan]) {
+      $("currentPlanName").textContent = PLAN_LABEL_MAP[plan];
+      if ($("contractDateText")) $("contractDateText").textContent = `선택 플랜: ${ACTIVE_TOTAL_COUNT}개국`;
+    }
+  }
+
+  if ($("trialModeInfoBox") && IS_TRIAL_MODE) {
+    $("trialModeInfoBox").classList.remove("hidden");
+    if ($("currentPlanName")) $("currentPlanName").textContent = "30개국 / 무료/ 7일";
+    if (IS_MOCK_MODE) {
+      $("trialModeInfoText").textContent = "현재는 30개국 / 7일간 무료체험의 '유튜브채널 모의등록' 모드입니다.";
+      $("trialModeActionRow").innerHTML = '<span class="muted" style="align-self:center;">실제 유튜브 등록체험을 원하실 경우</span><a class="btn btn-light" href="order.html?trial=1&count=30&mock=0&mode=chat">유튜브채널 실등록 바로 가기</a>';
+      $("youtubeFaqBox")?.classList.add("hidden");
+      $("openOauthGuideBtn")?.classList.add("hidden");
+    } else {
+      $("trialModeInfoText").textContent = "현재는 30개국 / 7일간 무료체험의 '유튜브 채널 실등록' 모드입니다.";
+      $("trialModeActionRow").innerHTML = '<span class="muted" style="align-self:center;">모의 유튜브 등록체험을 원하실 경우</span><a class="btn btn-light" href="order.html?trial=1&count=30&mock=1&mode=chat">유튜브채널 모의등록 바로 가기</a>';
+      $("youtubeFaqBox")?.classList.remove("hidden");
+      $("openOauthGuideBtn")?.classList.remove("hidden");
+    }
+  } else {
+    $("youtubeFaqBox")?.classList.remove("hidden");
+  }
+
+  $("upgradeBtn")?.addEventListener("click", () => { location.href = "plans.html#annual"; });
+
+  $("openOauthGuideBtn")?.addEventListener("click", () => $("oauthGuideModal")?.classList.remove("hidden"));
+  $("closeOauthGuideBtn")?.addEventListener("click", () => $("oauthGuideModal")?.classList.add("hidden"));
+  $("oauthGuideBackdrop")?.addEventListener("click", () => $("oauthGuideModal")?.classList.add("hidden"));
+  $("holdGuideBtn")?.addEventListener("click", () => $("holdGuideBox")?.classList.toggle("open"));
+
+  [$("oauthStartBtnSide"), $("oauthStartBtn")].forEach((btn) => {
+    btn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      $("oauthPopupGuideModal")?.classList.remove("hidden");
+    }, true);
+  });
+
+  $("oauthPopupGuideOkBtn")?.addEventListener("click", () => {
+    $("oauthPopupGuideModal")?.classList.add("hidden");
+    openChromeOAuthPopup();
+  });
+  $("oauthPopupGuideCloseBtn")?.addEventListener("click", () => $("oauthPopupGuideModal")?.classList.add("hidden"));
+  $("oauthPopupGuideBackdrop")?.addEventListener("click", () => $("oauthPopupGuideModal")?.classList.add("hidden"));
+
+  [$("channelCheckBtnSide"), $("channelCheckBtn")].forEach((btn) => {
+    btn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!accessToken) {
+        setStatuses("크롬 팝업 인증 전입니다.\n인증 완료 후 다시 확인해 주세요.");
+        return;
+      }
+      try {
+        const res = await fetch("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true", { headers: { Authorization: `Bearer ${accessToken}` } });
+        const data = await res.json();
+        const item = data.items && data.items[0];
+        if (!item) throw new Error("채널 정보를 찾지 못했습니다.");
+        setStatuses(`구글 승인 완료\n채널 연결 확인됨\n채널명: ${item.snippet.title}\n채널 ID: ${item.id}`, "ok");
+      } catch (err) {
+        setStatuses(`채널 연결 확인 실패\n${err.message}`, "bad");
+      }
+    }, true);
+  });
+
+  $("submitBtn")?.addEventListener("click", () => {
+    showSubmitModal(() => {
+      $("promptOutput").value = buildPrompt();
+      $("copyPromptBtn")?.classList.remove("hidden");
+      $("commandBlock")?.classList.remove("hidden");
+      $("copyWarning")?.classList.add("hidden");
+      $("chatTranslateBtn")?.classList.add("hidden");
+      copied = false;
+    });
+  });
+
+  $("resetBtn")?.addEventListener("click", () => {
+    ["videoUrl", "titleInput", "descInput", "promptOutput", "finalOutput", "deliveryLog"].forEach((id) => { if ($(id)) $(id).value = ""; });
+    $("copyPromptBtn")?.classList.add("hidden");
+    $("copyWarning")?.classList.add("hidden");
+    $("commandBlock")?.classList.add("hidden");
+    $("chatTranslateBtn")?.classList.add("hidden");
+    copied = false;
+    setProgress(0, `0 / ${ACTIVE_TOTAL_COUNT}`);
+    if ($("elapsedTime")) $("elapsedTime").textContent = "등록소요시간: 0초";
+  });
+
+  $("copyPromptBtn")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("promptOutput").value);
+      copied = true;
+      $("chatTranslateBtn")?.classList.remove("hidden");
+      $("copyWarning").textContent = "제미나이 번역의뢰문 복사가 완료되었습니다.";
+      $("copyWarning")?.classList.remove("hidden");
+    } catch (e) {
+      alert("복사에 실패했습니다.");
+    }
+  });
+
+  $("chatTranslateBtn")?.addEventListener("click", () => {
+    if (!copied) {
+      alert("먼저 제미나이 번역의뢰문 복사를 눌러 주세요.");
+      return;
+    }
+    window.open("https://gemini.google.com/", "_blank", "noopener,noreferrer");
+  });
+
+  document.querySelectorAll(".mini-copy").forEach((btn) => btn.addEventListener("click", async () => {
+    const target = $(btn.dataset.copy);
+    if (!target) return;
+    try {
+      await navigator.clipboard.writeText(target.value);
+      const old = btn.textContent;
+      btn.textContent = "복사 완료";
+      setTimeout(() => btn.textContent = old, 1200);
+    } catch (e) {
+      alert("명령어 복사에 실패했습니다.");
+    }
+  }));
+
+  $("copyFinalBtn")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(($("finalOutput").value || "").trim());
+      alert("최종본이 복사되었습니다.");
+    } catch (e) {
+      alert("최종본 복사에 실패했습니다.");
+    }
+  });
+
+
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "HUMATECK_OAUTH_SUCCESS") {
+      setStatuses("Google OAuth 인증이 완료되었습니다. 이제 배송 절차를 이어서 진행할 수 있습니다.", "ok");
+    }
+  });
+
+  $("sendOrderBtn")?.addEventListener("click", async () => {
+    if (IS_TRIAL_MODE && IS_MOCK_MODE) {
+      $("deliveryLog").value = "";
+      const finalText = ($("finalOutput")?.value || "").trim();
+      const requestedCount = countCountryCodeTokens(finalText) || ACTIVE_TOTAL_COUNT;
+      log("모의 유튜브 채널 등록 시작");
+      log(`입력 언어: ${requestedCount}개`);
+      setProgress(30, `${Math.max(1, Math.floor(requestedCount / 3))} / ${requestedCount}`);
+      setTimeout(() => { setProgress(65, `${Math.max(1, Math.floor((requestedCount * 2) / 3))} / ${requestedCount}`); }, 300);
+      setTimeout(() => {
+        setProgress(100, `${requestedCount} / ${requestedCount}`);
+        log("모의 등록 완료");
+        location.href = "trial_mock_result.html";
+      }, 650);
+      return;
+    }
+    await sendLocalizations();
+  });
+});
+</script>
+</body>
+</html>

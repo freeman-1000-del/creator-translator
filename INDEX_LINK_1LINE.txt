@@ -1,0 +1,7 @@
+index.html 연결 1줄만 바꾸면 됩니다.
+
+기존:
+<a class="btn btn-secondary" href="plans.html?mode=api">OpenAI API 자동번역으로 시작</a>
+
+변경:
+<a class="btn btn-secondary" href="plans_auto.html?mode=auto">OpenAI API 자동번역으로 시작</a>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Humateck 관리자 페이지</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.admin-wrap{max-width:1200px;margin:0 auto;padding:24px;}
+.admin-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;}
+.admin-card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;}
+.admin-card h2{margin:0 0 12px 0;}
+textarea{width:100%;min-height:180px;}
+.muted-box{padding:12px;border-radius:10px;background:#faf6e8;border:1px solid #e0c977;line-height:1.7;}
+@media (max-width: 900px){.admin-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+  <h1>Humateck 관리자 페이지</h1>
+  <div class="muted-box">고객용 주문페이지와 분리한 최소 관리자 틀입니다. 고객 화면에 노출하면 안 되는 내부 기록만 여기서 다루도록 비워 두었습니다.</div>
+
+  <div class="admin-grid" style="margin-top:18px;">
+    <section class="admin-card">
+      <h2>실등록 로그</h2>
+      <textarea placeholder="실등록 성공/실패 로그를 여기에 기록하십시오."></textarea>
+    </section>
+
+    <section class="admin-card">
+      <h2>보류 언어 / 오류 원문</h2>
+      <textarea placeholder="유튜브가 실제로 반환한 오류 원문을 그대로 보관하십시오."></textarea>
+    </section>
+
+    <section class="admin-card">
+      <h2>재배송 작업 메모</h2>
+      <textarea placeholder="보류언어 재배송 작업 내역을 기록하십시오."></textarea>
+    </section>
+
+    <section class="admin-card">
+      <h2>중복 / 내부 점검 메모</h2>
+      <textarea placeholder="고객 화면에 보여주지 않을 내부 메모만 기록하십시오."></textarea>
+    </section>
+  </div>
+</div>
+</body>
+</html>
